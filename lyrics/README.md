@@ -17,13 +17,14 @@ The left side is base text, right side is phonetic text rendered with `ruby/rt`.
 - Create folders and files
 - Drag and drop files/folders to move them
 - Edit file name and title
-- Per-row editor: two lines (`lyrics` + `comment`)
+- Single monospaced editor (VSCode-like)
+- Odd lines are lyrics, even lines are comments
 - Comment line shown under lyrics in preview
 - Inline style markers:
   - `**bold**`
   - `__underline__`
   - `{#dEaD64}text{/color}` (6-digit hex)
-- Keyboard shortcuts while editing rows:
+- Keyboard shortcuts in editor:
   - `Ctrl+B` for bold
   - `Ctrl+U` for underline
   - `Ctrl+L` for hex color tag

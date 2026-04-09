@@ -228,54 +228,21 @@ textarea {
   font-family: var(--font-lyric);
 }
 
-.row-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 0.75rem;
-}
-
-.label.no-gap {
-  margin: 0;
-}
-
-.rows-editor {
-  margin-top: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-.row-card {
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #fffdf8;
-  padding: 0.6rem;
-}
-
-.row-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.4rem;
-}
-
-.row-index {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.row-lyrics {
-  min-height: 64px;
-  font-family: var(--font-lyric);
-  margin-bottom: 0.35rem;
-}
-
-.row-comment {
-  min-height: 56px;
-  margin-bottom: 0.2rem;
-  color: var(--muted);
+.lyrics-editor {
+  --line-h: 1.55rem;
+  margin-top: 0.2rem;
+  min-height: 380px;
+  resize: vertical;
+  line-height: var(--line-h);
+  font-family: "JetBrains Mono", "Consolas", "Menlo", "Monaco", monospace;
+  white-space: pre;
+  tab-size: 2;
+  background-color: #fff;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    #ffffff 0 var(--line-h),
+    #f1f1f1 var(--line-h) calc(var(--line-h) * 2)
+  );
 }
 
 .help {

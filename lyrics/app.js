@@ -7,14 +7,13 @@ const COOKIE_MAX_TOTAL = 60000;
 const treeRoot = document.getElementById("treeRoot");
 const fileNameInput = document.getElementById("fileNameInput");
 const titleInput = document.getElementById("titleInput");
-const rowsEditor = document.getElementById("rowsEditor");
+const lyricsEditor = document.getElementById("lyricsEditor");
 const previewTitle = document.getElementById("previewTitle");
 const previewLyrics = document.getElementById("previewLyrics");
 
 const newFolderButton = document.getElementById("newFolderButton");
 const newFileButton = document.getElementById("newFileButton");
 const deleteNodeButton = document.getElementById("deleteNodeButton");
-const addRowButton = document.getElementById("addRowButton");
 
 const saveButton = document.getElementById("saveButton");
 const exportButton = document.getElementById("exportButton");
@@ -420,45 +419,34 @@ function setLayoutMode(mode) {
   }
 }
 
-function renderRowsEditor(file) {
-  rowsEditor.innerHTML = "";
+function rowsToEditorText(rows) {
+  const lines = [];
+  for (const row of rows) {
+    lines.push(row.lyrics || "");
+    lines.push(row.comment || "");
+  }
+  return lines.join("\n");
+}
 
-  file.rows.forEach((row, index) => {
-    const card = document.createElement("div");
-    card.className = "row-card";
+function editorTextToRows(text, previousRows = []) {
+  const lines = text.split("\n");
+  const rows = [];
 
-    const head = document.createElement("div");
-    head.className = "row-head";
+  for (let i = 0; i < lines.length; i += 2) {
+    const lyrics = lines[i] ?? "";
+    const comment = lines[i + 1] ?? "";
+    rows.push({
+      id: previousRows[Math.floor(i / 2)]?.id || createId(),
+      lyrics,
+      comment,
+    });
+  }
 
-    const rowIndex = document.createElement("p");
-    rowIndex.className = "row-index";
-    rowIndex.textContent = `Line ${index + 1}`;
+  if (rows.length === 0) {
+    rows.push(createRow("", ""));
+  }
 
-    const removeButton = document.createElement("button");
-    removeButton.type = "button";
-    removeButton.className = "secondary remove-row-button";
-    removeButton.dataset.rowId = row.id;
-    removeButton.textContent = "Delete";
-
-    head.append(rowIndex, removeButton);
-
-    const lyricsInput = document.createElement("textarea");
-    lyricsInput.className = "row-lyrics";
-    lyricsInput.dataset.rowId = row.id;
-    lyricsInput.dataset.field = "lyrics";
-    lyricsInput.placeholder = "Lyrics line";
-    lyricsInput.value = row.lyrics;
-
-    const commentInput = document.createElement("textarea");
-    commentInput.className = "row-comment";
-    commentInput.dataset.rowId = row.id;
-    commentInput.dataset.field = "comment";
-    commentInput.placeholder = "Comment line";
-    commentInput.value = row.comment || "";
-
-    card.append(head, lyricsInput, commentInput);
-    rowsEditor.append(card);
-  });
+  return rows;
 }
 
 function renderPreviewRows(file) {
@@ -488,7 +476,8 @@ function updateEditorFromSelection() {
     titleInput.value = "";
     fileNameInput.disabled = true;
     titleInput.disabled = true;
-    rowsEditor.innerHTML = "";
+    lyricsEditor.value = "";
+    lyricsEditor.disabled = true;
     previewTitle.textContent = "No file selected";
     previewLyrics.innerHTML = "";
     return;
@@ -496,12 +485,13 @@ function updateEditorFromSelection() {
 
   fileNameInput.disabled = false;
   titleInput.disabled = false;
+  lyricsEditor.disabled = false;
 
   fileNameInput.value = file.name;
   titleInput.value = file.title;
+  lyricsEditor.value = rowsToEditorText(file.rows);
   previewTitle.textContent = file.title.trim() || "Untitled";
 
-  renderRowsEditor(file);
   renderPreviewRows(file);
 }
 
@@ -514,48 +504,12 @@ function saveHeaderToSelection() {
   file.title = titleInput.value;
 }
 
-function addRowToSelectedFile() {
+function syncEditorToSelectedFile() {
   const file = getSelectedFile();
   if (!file) {
     return;
   }
-  file.rows.push(createRow("", ""));
-  renderRowsEditor(file);
-  renderPreviewRows(file);
-  scheduleAutosave();
-}
-
-function removeRowFromSelectedFile(rowId) {
-  const file = getSelectedFile();
-  if (!file) {
-    return;
-  }
-  file.rows = file.rows.filter((row) => row.id !== rowId);
-  if (file.rows.length === 0) {
-    file.rows = [createRow("", "")];
-  }
-  renderRowsEditor(file);
-  renderPreviewRows(file);
-  scheduleAutosave();
-}
-
-function patchRowValue(rowId, field, value) {
-  const file = getSelectedFile();
-  if (!file) {
-    return;
-  }
-
-  const row = file.rows.find((item) => item.id === rowId);
-  if (!row) {
-    return;
-  }
-
-  if (field === "lyrics") {
-    row.lyrics = value;
-  } else if (field === "comment") {
-    row.comment = value;
-  }
-
+  file.rows = editorTextToRows(lyricsEditor.value, file.rows);
   renderPreviewRows(file);
   scheduleAutosave();
 }
@@ -563,13 +517,10 @@ function patchRowValue(rowId, field, value) {
 function wrapSelection(input, prefix, suffix) {
   const start = input.selectionStart ?? 0;
   const end = input.selectionEnd ?? 0;
-  const before = input.value.slice(0, start);
-  const middle = input.value.slice(start, end);
-  const after = input.value.slice(end);
-
-  input.value = `${before}${prefix}${middle}${suffix}${after}`;
-  input.setSelectionRange(start + prefix.length, end + prefix.length);
-  input.dispatchEvent(new Event("input", { bubbles: true }));
+  const selected = input.value.slice(start, end);
+  input.setRangeText(`${prefix}${selected}${suffix}`, start, end, "select");
+  input.setSelectionRange(start + prefix.length, start + prefix.length + selected.length);
+  syncEditorToSelectedFile();
 }
 
 function createFolder() {
@@ -897,38 +848,13 @@ function bindEditorEvents() {
     scheduleAutosave();
   });
 
-  rowsEditor.addEventListener("input", (event) => {
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) {
-      return;
-    }
-
-    const rowId = target.dataset.rowId;
-    const field = target.dataset.field;
-    if (!rowId || !field) {
-      return;
-    }
-
-    patchRowValue(rowId, field, target.value);
+  lyricsEditor.addEventListener("input", () => {
+    syncEditorToSelectedFile();
   });
 
-  rowsEditor.addEventListener("click", (event) => {
+  lyricsEditor.addEventListener("keydown", (event) => {
     const target = event.target;
-    if (!(target instanceof HTMLElement)) {
-      return;
-    }
-
-    if (target.classList.contains("remove-row-button")) {
-      const rowId = target.dataset.rowId;
-      if (rowId) {
-        removeRowFromSelectedFile(rowId);
-      }
-    }
-  });
-
-  rowsEditor.addEventListener("keydown", (event) => {
-    const target = event.target;
-    if (!(target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement)) {
+    if (!(target instanceof HTMLTextAreaElement)) {
       return;
     }
 
@@ -966,8 +892,6 @@ function bindEditorEvents() {
       wrapSelection(target, `{${hex}}`, "{/color}");
     }
   });
-
-  addRowButton.addEventListener("click", addRowToSelectedFile);
 }
 
 function bindActionEvents() {

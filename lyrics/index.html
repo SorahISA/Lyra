@@ -46,11 +46,8 @@
       <label class="label" for="titleInput">Song title</label>
       <input id="titleInput" type="text" placeholder="Song title" />
 
-      <div class="row-toolbar">
-        <p class="label no-gap">Rows (lyrics / comment)</p>
-        <button id="addRowButton" type="button" class="secondary">+ Row</button>
-      </div>
-      <div id="rowsEditor" class="rows-editor"></div>
+      <label class="label" for="lyricsEditor">Lyrics Editor</label>
+      <textarea id="lyricsEditor" class="lyrics-editor" spellcheck="false" placeholder="Odd lines: lyrics&#10;Even lines: comments"></textarea>
 
       <details class="help">
         <summary>Syntax help</summary>
@@ -58,7 +55,8 @@
           <li><code>[漢字|かな]</code> renders as ruby text.</li>
           <li><code>**bold**</code>, <code>__underline__</code></li>
           <li><code>{#dEaD64}text{/color}</code> for 6-digit hex color</li>
-          <li>Shortcuts: <code>Ctrl+B</code>, <code>Ctrl+U</code>, <code>Ctrl+L</code></li>
+          <li>Odd lines are lyrics, even lines are comments.</li>
+          <li>Shortcuts: <code>Ctrl+B</code>, <code>Ctrl+U</code>, <code>Ctrl+L</code> (undoable via <code>Ctrl+Z</code>).</li>
         </ul>
       </details>
 
