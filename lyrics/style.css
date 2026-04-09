@@ -267,106 +267,15 @@ textarea {
 }
 
 .row-lyrics {
-  min-height: 82px;
+  min-height: 64px;
   font-family: var(--font-lyric);
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.35rem;
 }
 
-.row-meta {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 0.45rem;
-}
-
-.beat-input,
-.note-input {
-  font-size: 0.92rem;
-}
-
-.events-editor {
-  margin-top: 0.5rem;
-  border-top: 1px dashed var(--line);
-  padding-top: 0.5rem;
-}
-
-.events-head {
-  font-size: 0.82rem;
+.row-comment {
+  min-height: 56px;
+  margin-bottom: 0.2rem;
   color: var(--muted);
-  margin-bottom: 0.38rem;
-}
-
-.event-create {
-  display: grid;
-  grid-template-columns: 130px 1fr 90px;
-  gap: 0.4rem;
-  margin-bottom: 0.45rem;
-}
-
-.event-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.event-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.28rem;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0.16rem 0.45rem;
-  font-size: 0.8rem;
-  background: #fff;
-}
-
-.event-remove {
-  border: none;
-  background: transparent;
-  color: var(--muted);
-  padding: 0;
-  line-height: 1;
-  font-size: 0.84rem;
-}
-
-.event-remove:hover {
-  color: var(--accent-strong);
-  background: transparent;
-}
-
-.event-sing,
-.preview-event.event-sing {
-  border-color: #9fd5ff;
-  background: #eef8ff;
-}
-
-.event-hey,
-.preview-event.event-hey {
-  border-color: #fcb8ab;
-  background: #fff0ec;
-}
-
-.event-clap,
-.preview-event.event-clap {
-  border-color: #ffd89a;
-  background: #fff8ea;
-}
-
-.event-color,
-.preview-event.event-color {
-  border-color: #ddb4ff;
-  background: #f7eeff;
-}
-
-.event-uo,
-.preview-event.event-uo {
-  border-color: #ffe5a4;
-  background: #fff9e5;
-}
-
-.event-call,
-.preview-event.event-call {
-  border-color: #c5d2de;
-  background: #f1f6fb;
 }
 
 .help {
@@ -405,7 +314,6 @@ textarea {
 }
 
 .preview-row {
-  --beats: 8;
   border: 1px solid var(--line);
   border-radius: 10px;
   overflow: hidden;
@@ -417,12 +325,7 @@ textarea {
   font-size: 1.03rem;
   font-family: var(--font-lyric);
   padding: 0.52rem 0.62rem;
-  background-size: calc(100% / var(--beats)) 100%;
-  background-image: linear-gradient(
-    to right,
-    rgba(159, 47, 26, 0.14) 1px,
-    transparent 1px
-  );
+  background: #fffefb;
 }
 
 .preview-line.note {
@@ -430,24 +333,6 @@ textarea {
   color: var(--muted);
   font-size: 0.92rem;
   background-color: #fffcf5;
-}
-
-.preview-events {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  padding: 0.4rem 0.55rem 0.2rem;
-  border-bottom: 1px dashed var(--line);
-  background: #fffcf6;
-}
-
-.preview-event {
-  display: inline-flex;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 0.13rem 0.42rem;
-  font-size: 0.76rem;
-  color: #4e4a41;
 }
 
 .tint-red {
@@ -472,6 +357,17 @@ textarea {
 
 .tint-orange {
   color: #b35a1b;
+}
+
+body.focus-preview .lyrics {
+  display: block;
+  column-width: 360px;
+  column-gap: 1rem;
+}
+
+body.focus-preview .preview-row {
+  break-inside: avoid;
+  margin: 0 0 0.75rem;
 }
 
 ruby rt {

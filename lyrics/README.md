@@ -17,15 +17,18 @@ The left side is base text, right side is phonetic text rendered with `ruby/rt`.
 - Create folders and files
 - Drag and drop files/folders to move them
 - Edit file name and title
-- Per-row editor: `lyrics + beat + note`
-- Row note line shown under lyrics and aligned with beat grid
-- Event annotation per row (`sing`, `hey`, `clap`, `color`, `uo`, `call`)
+- Per-row editor: two lines (`lyrics` + `comment`)
+- Comment line shown under lyrics in preview
 - Inline style markers:
   - `**bold**`
   - `__underline__`
-  - `{red}text{/red}` (blue/green/yellow/pink/orange)
+  - `{#dEaD64}text{/color}` (6-digit hex)
+- Keyboard shortcuts while editing rows:
+  - `Ctrl+B` for bold
+  - `Ctrl+U` for underline
+  - `Ctrl+L` for hex color tag
 - Live preview with ruby annotations
-- Focus mode: maximize Editor or Preview
+- Focus mode: maximize Editor or Preview (Preview uses responsive multi-column layout)
 - Cookie-based persistence (no backend)
 - Export/import full workspace JSON
 

@@ -32,27 +32,16 @@ let autosaveTimer = null;
 let dragSourceId = null;
 const expandedFolders = new Set(["root"]);
 let workspace = createDefaultWorkspace();
-const EVENT_TYPES = ["sing", "hey", "clap", "color", "uo", "call"];
 
 function createId() {
   return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
 }
 
-function createRow(lyrics = "", beat = 8, note = "") {
+function createRow(lyrics = "", comment = "") {
   return {
     id: createId(),
     lyrics,
-    beat,
-    note,
-    events: [],
-  };
-}
-
-function createEvent(type = "call", detail = "") {
-  return {
-    id: createId(),
-    type,
-    detail,
+    comment,
   };
 }
 
@@ -75,8 +64,8 @@ function createDefaultWorkspace() {
               name: "demo-song",
               title: "Demo Song",
               rows: [
-                createRow("[天球|そら]へ [シルエットダンス|silhouette dance]", 8, "1 & 2 & 3 & 4 &"),
-                createRow("[世界|せかい]を [越|こ]えていこう", 8, "x - x - x x - -"),
+                createRow("[天球|そら]へ [シルエットダンス|silhouette dance]", "audience sing together"),
+                createRow("[世界|せかい]を [越|こ]えていこう", "__clap__ on every strong beat"),
               ],
             },
           ],
@@ -185,14 +174,6 @@ function isValidWorkspace(candidate) {
   return true;
 }
 
-function clampBeat(value) {
-  const n = Number.parseInt(value, 10);
-  if (!Number.isFinite(n)) {
-    return 8;
-  }
-  return Math.max(1, Math.min(32, n));
-}
-
 function normalizeFileNode(node, seen = new WeakSet()) {
   if (!node || typeof node !== "object") {
     return null;
@@ -206,38 +187,26 @@ function normalizeFileNode(node, seen = new WeakSet()) {
   if (node.type === "file") {
     if (!Array.isArray(node.rows)) {
       const legacyLyrics = typeof node.lyrics === "string" ? node.lyrics : "";
-      node.rows = legacyLyrics.split("\n").map((line) => createRow(line, 8, ""));
+      node.rows = legacyLyrics.split("\n").map((line) => createRow(line, ""));
       if (node.rows.length === 0) {
-        node.rows = [createRow("", 8, "")];
+        node.rows = [createRow("", "")];
       }
       delete node.lyrics;
     }
 
-    node.rows = node.rows.map((row) => {
-      const events = Array.isArray(row.events)
-        ? row.events
-            .map((event) => ({
-              id: typeof event.id === "string" ? event.id : createId(),
-              type:
-                typeof event.type === "string" && EVENT_TYPES.includes(event.type)
-                  ? event.type
-                  : "call",
-              detail: typeof event.detail === "string" ? event.detail : "",
-            }))
-            .slice(0, 20)
-        : [];
-
-      return {
-        id: typeof row.id === "string" ? row.id : createId(),
-        lyrics: typeof row.lyrics === "string" ? row.lyrics : "",
-        beat: clampBeat(row.beat),
-        note: typeof row.note === "string" ? row.note : "",
-        events,
-      };
-    });
+    node.rows = node.rows.map((row) => ({
+      id: typeof row.id === "string" ? row.id : createId(),
+      lyrics: typeof row.lyrics === "string" ? row.lyrics : "",
+      comment:
+        typeof row.comment === "string"
+          ? row.comment
+          : typeof row.note === "string"
+            ? row.note
+            : "",
+    }));
 
     if (node.rows.length === 0) {
-      node.rows = [createRow("", 8, "")];
+      node.rows = [createRow("", "")];
     }
 
     if (typeof node.name !== "string") {
@@ -263,6 +232,7 @@ function normalizeFileNode(node, seen = new WeakSet()) {
   if (!Array.isArray(node.children)) {
     node.children = [];
   }
+
   const normalizedChildren = [];
   for (const child of node.children) {
     const normalizedChild = normalizeFileNode(child, seen);
@@ -284,6 +254,7 @@ function normalizeWorkspaceData() {
   }
   normalizedRoot.id = "root";
   workspace.tree = normalizedRoot;
+
   if (typeof workspace.selectedNodeId !== "string") {
     workspace.selectedNodeId = workspace.selectedFileId;
   }
@@ -301,10 +272,7 @@ function escapeHtml(text) {
 function renderStyledText(rawText) {
   let output = escapeHtml(rawText);
 
-  output = output.replace(
-    /\{(red|blue|green|yellow|pink|orange)\}(.+?)\{\/\1\}/g,
-    '<span class="tint-$1">$2</span>',
-  );
+  output = output.replace(/\{#([0-9a-fA-F]{6})\}([\s\S]*?)\{\/color\}/g, '<span style="color:#$1">$2</span>');
   output = output.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
   output = output.replace(/__(.+?)__/g, "<u>$1</u>");
 
@@ -326,7 +294,7 @@ function renderLine(line) {
 
     const close = line.indexOf("]", open + 1);
     if (close === -1) {
-      pieces.push(escapeHtml(line.slice(open)));
+      pieces.push(renderStyledText(line.slice(open)));
       break;
     }
 
@@ -394,7 +362,7 @@ function ensureSelectedFile() {
         type: "file",
         name: "new-lyrics",
         title: "Untitled",
-        rows: [createRow("", 8, "")],
+        rows: [createRow("", "")],
       };
       workspace.tree.children.push(file);
       workspace.selectedFileId = file.id;
@@ -454,23 +422,23 @@ function setLayoutMode(mode) {
 
 function renderRowsEditor(file) {
   rowsEditor.innerHTML = "";
+
   file.rows.forEach((row, index) => {
     const card = document.createElement("div");
     card.className = "row-card";
-    card.dataset.rowId = row.id;
 
     const head = document.createElement("div");
     head.className = "row-head";
 
     const rowIndex = document.createElement("p");
     rowIndex.className = "row-index";
-    rowIndex.textContent = `Row ${index + 1}`;
+    rowIndex.textContent = `Line ${index + 1}`;
 
     const removeButton = document.createElement("button");
     removeButton.type = "button";
     removeButton.className = "secondary remove-row-button";
-    removeButton.textContent = "Delete Row";
     removeButton.dataset.rowId = row.id;
+    removeButton.textContent = "Delete";
 
     head.append(rowIndex, removeButton);
 
@@ -478,90 +446,17 @@ function renderRowsEditor(file) {
     lyricsInput.className = "row-lyrics";
     lyricsInput.dataset.rowId = row.id;
     lyricsInput.dataset.field = "lyrics";
-    lyricsInput.value = row.lyrics;
     lyricsInput.placeholder = "Lyrics line";
+    lyricsInput.value = row.lyrics;
 
-    const meta = document.createElement("div");
-    meta.className = "row-meta";
+    const commentInput = document.createElement("textarea");
+    commentInput.className = "row-comment";
+    commentInput.dataset.rowId = row.id;
+    commentInput.dataset.field = "comment";
+    commentInput.placeholder = "Comment line";
+    commentInput.value = row.comment || "";
 
-    const beatInput = document.createElement("input");
-    beatInput.type = "number";
-    beatInput.min = "1";
-    beatInput.max = "32";
-    beatInput.step = "1";
-    beatInput.className = "beat-input";
-    beatInput.dataset.rowId = row.id;
-    beatInput.dataset.field = "beat";
-    beatInput.value = String(row.beat);
-
-    const noteInput = document.createElement("input");
-    noteInput.type = "text";
-    noteInput.className = "note-input";
-    noteInput.dataset.rowId = row.id;
-    noteInput.dataset.field = "note";
-    noteInput.value = row.note;
-    noteInput.placeholder = "Note aligned to beat";
-
-    const eventsEditor = document.createElement("div");
-    eventsEditor.className = "events-editor";
-
-    const eventsHead = document.createElement("div");
-    eventsHead.className = "events-head";
-    eventsHead.textContent = "Events";
-
-    const createLine = document.createElement("div");
-    createLine.className = "event-create";
-
-    const eventTypeSelect = document.createElement("select");
-    eventTypeSelect.className = "event-type-input";
-    eventTypeSelect.dataset.rowId = row.id;
-    for (const type of EVENT_TYPES) {
-      const option = document.createElement("option");
-      option.value = type;
-      option.textContent = type.toUpperCase();
-      eventTypeSelect.append(option);
-    }
-
-    const eventDetailInput = document.createElement("input");
-    eventDetailInput.type = "text";
-    eventDetailInput.className = "event-detail-input";
-    eventDetailInput.placeholder = "detail (e.g. pink, 2x, short call)";
-    eventDetailInput.dataset.rowId = row.id;
-
-    const addEventButton = document.createElement("button");
-    addEventButton.type = "button";
-    addEventButton.className = "secondary add-event-button";
-    addEventButton.dataset.rowId = row.id;
-    addEventButton.textContent = "+ Event";
-
-    createLine.append(eventTypeSelect, eventDetailInput, addEventButton);
-
-    const eventList = document.createElement("div");
-    eventList.className = "event-list";
-    for (const event of row.events || []) {
-      const chip = document.createElement("span");
-      chip.className = `event-chip event-${event.type}`;
-
-      const text = event.detail
-        ? `${event.type.toUpperCase()}: ${event.detail}`
-        : event.type.toUpperCase();
-      chip.textContent = text;
-
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.className = "event-remove";
-      remove.dataset.rowId = row.id;
-      remove.dataset.eventId = event.id;
-      remove.textContent = "x";
-
-      chip.append(remove);
-      eventList.append(chip);
-    }
-
-    eventsEditor.append(eventsHead, createLine, eventList);
-
-    meta.append(beatInput, noteInput);
-    card.append(head, lyricsInput, meta, eventsEditor);
+    card.append(head, lyricsInput, commentInput);
     rowsEditor.append(card);
   });
 }
@@ -572,33 +467,16 @@ function renderPreviewRows(file) {
   for (const row of file.rows) {
     const wrap = document.createElement("div");
     wrap.className = "preview-row";
-    wrap.style.setProperty("--beats", String(clampBeat(row.beat)));
 
     const lyricLine = document.createElement("div");
     lyricLine.className = "preview-line lyric";
     lyricLine.innerHTML = renderLine(row.lyrics || " ");
 
-    const noteLine = document.createElement("div");
-    noteLine.className = "preview-line note";
-    noteLine.innerHTML = renderStyledText(row.note || " ");
+    const commentLine = document.createElement("div");
+    commentLine.className = "preview-line note";
+    commentLine.innerHTML = renderStyledText(row.comment || " ");
 
-    const events = row.events || [];
-    const eventLine = document.createElement("div");
-    eventLine.className = "preview-events";
-    for (const event of events) {
-      const badge = document.createElement("span");
-      badge.className = `preview-event event-${event.type}`;
-      badge.textContent = event.detail
-        ? `${event.type.toUpperCase()}: ${event.detail}`
-        : event.type.toUpperCase();
-      eventLine.append(badge);
-    }
-
-    if (events.length > 0) {
-      wrap.append(eventLine);
-    }
-
-    wrap.append(lyricLine, noteLine);
+    wrap.append(lyricLine, commentLine);
     previewLyrics.append(wrap);
   }
 }
@@ -641,7 +519,7 @@ function addRowToSelectedFile() {
   if (!file) {
     return;
   }
-  file.rows.push(createRow("", 8, ""));
+  file.rows.push(createRow("", ""));
   renderRowsEditor(file);
   renderPreviewRows(file);
   scheduleAutosave();
@@ -654,46 +532,8 @@ function removeRowFromSelectedFile(rowId) {
   }
   file.rows = file.rows.filter((row) => row.id !== rowId);
   if (file.rows.length === 0) {
-    file.rows = [createRow("", 8, "")];
+    file.rows = [createRow("", "")];
   }
-  renderRowsEditor(file);
-  renderPreviewRows(file);
-  scheduleAutosave();
-}
-
-function addEventToRow(rowId, type, detail) {
-  const file = getSelectedFile();
-  if (!file) {
-    return;
-  }
-
-  const row = file.rows.find((item) => item.id === rowId);
-  if (!row) {
-    return;
-  }
-
-  const safeType = EVENT_TYPES.includes(type) ? type : "call";
-  row.events = Array.isArray(row.events) ? row.events : [];
-  row.events.push(createEvent(safeType, detail.trim()));
-  row.events = row.events.slice(-20);
-
-  renderRowsEditor(file);
-  renderPreviewRows(file);
-  scheduleAutosave();
-}
-
-function removeEventFromRow(rowId, eventId) {
-  const file = getSelectedFile();
-  if (!file) {
-    return;
-  }
-
-  const row = file.rows.find((item) => item.id === rowId);
-  if (!row) {
-    return;
-  }
-
-  row.events = (row.events || []).filter((event) => event.id !== eventId);
   renderRowsEditor(file);
   renderPreviewRows(file);
   scheduleAutosave();
@@ -704,21 +544,32 @@ function patchRowValue(rowId, field, value) {
   if (!file) {
     return;
   }
+
   const row = file.rows.find((item) => item.id === rowId);
   if (!row) {
     return;
   }
 
-  if (field === "beat") {
-    row.beat = clampBeat(value);
-  } else if (field === "lyrics") {
+  if (field === "lyrics") {
     row.lyrics = value;
-  } else if (field === "note") {
-    row.note = value;
+  } else if (field === "comment") {
+    row.comment = value;
   }
 
   renderPreviewRows(file);
   scheduleAutosave();
+}
+
+function wrapSelection(input, prefix, suffix) {
+  const start = input.selectionStart ?? 0;
+  const end = input.selectionEnd ?? 0;
+  const before = input.value.slice(0, start);
+  const middle = input.value.slice(start, end);
+  const after = input.value.slice(end);
+
+  input.value = `${before}${prefix}${middle}${suffix}${after}`;
+  input.setSelectionRange(start + prefix.length, end + prefix.length);
+  input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
 function createFolder() {
@@ -776,7 +627,7 @@ function createFile() {
     type: "file",
     name: name.trim() || "new-lyrics",
     title: "Untitled",
-    rows: [createRow("", 8, "")],
+    rows: [createRow("", "")],
   };
 
   parentFolder.children.push(file);
@@ -1059,10 +910,6 @@ function bindEditorEvents() {
     }
 
     patchRowValue(rowId, field, target.value);
-
-    if (field === "beat") {
-      target.value = String(clampBeat(target.value));
-    }
   });
 
   rowsEditor.addEventListener("click", (event) => {
@@ -1076,37 +923,47 @@ function bindEditorEvents() {
       if (rowId) {
         removeRowFromSelectedFile(rowId);
       }
+    }
+  });
+
+  rowsEditor.addEventListener("keydown", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLTextAreaElement || target instanceof HTMLInputElement)) {
       return;
     }
 
-    if (target.classList.contains("add-event-button")) {
-      const rowId = target.dataset.rowId;
-      if (!rowId) {
-        return;
-      }
-
-      const rowCard = target.closest(".row-card");
-      if (!rowCard) {
-        return;
-      }
-
-      const typeInput = rowCard.querySelector(".event-type-input");
-      const detailInput = rowCard.querySelector(".event-detail-input");
-      if (!(typeInput instanceof HTMLSelectElement) || !(detailInput instanceof HTMLInputElement)) {
-        return;
-      }
-
-      addEventToRow(rowId, typeInput.value, detailInput.value);
-      detailInput.value = "";
+    const ctrl = event.ctrlKey || event.metaKey;
+    if (!ctrl) {
       return;
     }
 
-    if (target.classList.contains("event-remove")) {
-      const rowId = target.dataset.rowId;
-      const eventId = target.dataset.eventId;
-      if (rowId && eventId) {
-        removeEventFromRow(rowId, eventId);
+    const key = event.key.toLowerCase();
+    if (key === "b") {
+      event.preventDefault();
+      wrapSelection(target, "**", "**");
+      return;
+    }
+
+    if (key === "u") {
+      event.preventDefault();
+      wrapSelection(target, "__", "__");
+      return;
+    }
+
+    if (key === "l") {
+      event.preventDefault();
+      const picked = window.prompt("Hex color (#RRGGBB):", "#dEaD64");
+      if (!picked) {
+        return;
       }
+
+      const hex = picked.trim();
+      if (!/^#[0-9a-fA-F]{6}$/.test(hex)) {
+        showStatus("Color must be #RRGGBB.");
+        return;
+      }
+
+      wrapSelection(target, `{${hex}}`, "{/color}");
     }
   });
 
