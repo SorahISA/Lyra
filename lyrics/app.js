@@ -7,28 +7,43 @@ const COOKIE_MAX_TOTAL = 60000;
 const treeRoot = document.getElementById("treeRoot");
 const fileNameInput = document.getElementById("fileNameInput");
 const titleInput = document.getElementById("titleInput");
-const lyricsInput = document.getElementById("lyricsInput");
+const rowsEditor = document.getElementById("rowsEditor");
 const previewTitle = document.getElementById("previewTitle");
 const previewLyrics = document.getElementById("previewLyrics");
+
 const newFolderButton = document.getElementById("newFolderButton");
 const newFileButton = document.getElementById("newFileButton");
 const deleteNodeButton = document.getElementById("deleteNodeButton");
+const addRowButton = document.getElementById("addRowButton");
+
 const saveButton = document.getElementById("saveButton");
 const exportButton = document.getElementById("exportButton");
 const importButton = document.getElementById("importButton");
 const resetButton = document.getElementById("resetButton");
+
+const focusEditorButton = document.getElementById("focusEditorButton");
+const focusPreviewButton = document.getElementById("focusPreviewButton");
+const normalLayoutButton = document.getElementById("normalLayoutButton");
+
 const importFileInput = document.getElementById("importFileInput");
 const status = document.getElementById("status");
 
 let autosaveTimer = null;
 let dragSourceId = null;
-
 const expandedFolders = new Set(["root"]);
-
 let workspace = createDefaultWorkspace();
 
 function createId() {
   return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function createRow(lyrics = "", beat = 8, note = "") {
+  return {
+    id: createId(),
+    lyrics,
+    beat,
+    note,
+  };
 }
 
 function createDefaultWorkspace() {
@@ -49,7 +64,10 @@ function createDefaultWorkspace() {
               type: "file",
               name: "demo-song",
               title: "Demo Song",
-              lyrics: `[天球|そら]へ [シルエットダンス|silhouette dance]\\n\\n[世界|せかい]を [越|こ]えていこう`,
+              rows: [
+                createRow("[天球|そら]へ [シルエットダンス|silhouette dance]", 8, "1 & 2 & 3 & 4 &"),
+                createRow("[世界|せかい]を [越|こ]えていこう", 8, "x - x - x x - -"),
+              ],
             },
           ],
         },
@@ -66,8 +84,7 @@ function setCookie(name, value, maxAge = COOKIE_MAX_AGE) {
 
 function getCookie(name) {
   const encodedName = `${name}=`;
-  const parts = document.cookie.split(";");
-  for (const rawPart of parts) {
+  for (const rawPart of document.cookie.split(";")) {
     const part = rawPart.trim();
     if (part.startsWith(encodedName)) {
       return part.slice(encodedName.length);
@@ -81,9 +98,7 @@ function deleteCookie(name) {
 }
 
 function saveWorkspaceToCookies(current) {
-  const json = JSON.stringify(current);
-  const encoded = encodeURIComponent(json);
-
+  const encoded = encodeURIComponent(JSON.stringify(current));
   if (encoded.length > COOKIE_MAX_TOTAL) {
     throw new Error("Workspace too large for cookie storage.");
   }
@@ -92,8 +107,7 @@ function saveWorkspaceToCookies(current) {
   const prevMeta = getCookie(COOKIE_META_KEY);
   let previousCount = 0;
   if (prevMeta) {
-    const countPart = prevMeta.split(".")[0];
-    previousCount = Number.parseInt(countPart, 10) || 0;
+    previousCount = Number.parseInt(prevMeta.split(".")[0], 10) || 0;
   }
 
   for (let i = 0; i < previousCount; i += 1) {
@@ -116,8 +130,7 @@ function loadWorkspaceFromCookies() {
       return null;
     }
 
-    const countPart = meta.split(".")[0];
-    const chunkCount = Number.parseInt(countPart, 10);
+    const chunkCount = Number.parseInt(meta.split(".")[0], 10);
     if (!Number.isFinite(chunkCount) || chunkCount <= 0) {
       return null;
     }
@@ -132,11 +145,7 @@ function loadWorkspaceFromCookies() {
     }
 
     const parsed = JSON.parse(decodeURIComponent(merged));
-    if (!isValidWorkspace(parsed)) {
-      return null;
-    }
-
-    return parsed;
+    return isValidWorkspace(parsed) ? parsed : null;
   } catch {
     return null;
   }
@@ -164,6 +173,58 @@ function isValidWorkspace(candidate) {
     return false;
   }
   return true;
+}
+
+function clampBeat(value) {
+  const n = Number.parseInt(value, 10);
+  if (!Number.isFinite(n)) {
+    return 8;
+  }
+  return Math.max(1, Math.min(32, n));
+}
+
+function normalizeFileNode(node) {
+  if (node.type === "file") {
+    if (!Array.isArray(node.rows)) {
+      const legacyLyrics = typeof node.lyrics === "string" ? node.lyrics : "";
+      node.rows = legacyLyrics.split("\n").map((line) => createRow(line, 8, ""));
+      if (node.rows.length === 0) {
+        node.rows = [createRow("", 8, "")];
+      }
+      delete node.lyrics;
+    }
+
+    node.rows = node.rows.map((row) => ({
+      id: typeof row.id === "string" ? row.id : createId(),
+      lyrics: typeof row.lyrics === "string" ? row.lyrics : "",
+      beat: clampBeat(row.beat),
+      note: typeof row.note === "string" ? row.note : "",
+    }));
+
+    if (node.rows.length === 0) {
+      node.rows = [createRow("", 8, "")];
+    }
+
+    if (typeof node.name !== "string") {
+      node.name = "untitled-file";
+    }
+    if (typeof node.title !== "string") {
+      node.title = "Untitled";
+    }
+    return;
+  }
+
+  if (!Array.isArray(node.children)) {
+    node.children = [];
+  }
+  node.children.forEach((child) => normalizeFileNode(child));
+}
+
+function normalizeWorkspaceData() {
+  normalizeFileNode(workspace.tree);
+  if (typeof workspace.selectedNodeId !== "string") {
+    workspace.selectedNodeId = workspace.selectedFileId;
+  }
 }
 
 function escapeHtml(text) {
@@ -196,7 +257,6 @@ function renderLine(line) {
 
     const inner = line.slice(open + 1, close);
     const separator = inner.indexOf("|");
-
     if (separator === -1) {
       pieces.push(escapeHtml(line.slice(open, close + 1)));
       i = close + 1;
@@ -205,7 +265,6 @@ function renderLine(line) {
 
     const base = inner.slice(0, separator).trim();
     const phonetic = inner.slice(separator + 1).trim();
-
     if (!base || !phonetic) {
       pieces.push(escapeHtml(line.slice(open, close + 1)));
       i = close + 1;
@@ -219,13 +278,6 @@ function renderLine(line) {
   return pieces.join("");
 }
 
-function renderLyrics(rawLyrics) {
-  return rawLyrics
-    .split("\\n")
-    .map((line) => renderLine(line))
-    .join("<br>");
-}
-
 function findNodeWithParentById(node, id, parent = null) {
   if (node.id === id) {
     return { node, parent };
@@ -235,6 +287,19 @@ function findNodeWithParentById(node, id, parent = null) {
   }
   for (const child of node.children) {
     const hit = findNodeWithParentById(child, id, node);
+    if (hit) {
+      return hit;
+    }
+  }
+  return null;
+}
+
+function findFirstFile(node) {
+  if (node.type === "file") {
+    return node;
+  }
+  for (const child of node.children) {
+    const hit = findFirstFile(child);
     if (hit) {
       return hit;
     }
@@ -254,7 +319,7 @@ function ensureSelectedFile() {
         type: "file",
         name: "new-lyrics",
         title: "Untitled",
-        lyrics: "",
+        rows: [createRow("", 8, "")],
       };
       workspace.tree.children.push(file);
       workspace.selectedFileId = file.id;
@@ -267,25 +332,12 @@ function ensureSelectedFile() {
   }
 }
 
-function findFirstFile(node) {
-  if (node.type === "file") {
-    return node;
-  }
-  for (const child of node.children) {
-    const hit = findFirstFile(child);
-    if (hit) {
-      return hit;
-    }
-  }
-  return null;
-}
-
 function getSelectedFile() {
-  const selected = findNodeWithParentById(workspace.tree, workspace.selectedFileId);
-  if (!selected || selected.node.type !== "file") {
+  const hit = findNodeWithParentById(workspace.tree, workspace.selectedFileId);
+  if (!hit || hit.node.type !== "file") {
     return null;
   }
-  return selected.node;
+  return hit.node;
 }
 
 function showStatus(message) {
@@ -301,7 +353,6 @@ function scheduleAutosave() {
   if (autosaveTimer) {
     clearTimeout(autosaveTimer);
   }
-
   autosaveTimer = setTimeout(() => {
     persistWorkspace();
   }, 350);
@@ -316,15 +367,101 @@ function persistWorkspace() {
   }
 }
 
+function setLayoutMode(mode) {
+  document.body.classList.remove("focus-editor", "focus-preview");
+  if (mode === "editor") {
+    document.body.classList.add("focus-editor");
+  }
+  if (mode === "preview") {
+    document.body.classList.add("focus-preview");
+  }
+}
+
+function renderRowsEditor(file) {
+  rowsEditor.innerHTML = "";
+  file.rows.forEach((row, index) => {
+    const card = document.createElement("div");
+    card.className = "row-card";
+    card.dataset.rowId = row.id;
+
+    const head = document.createElement("div");
+    head.className = "row-head";
+
+    const rowIndex = document.createElement("p");
+    rowIndex.className = "row-index";
+    rowIndex.textContent = `Row ${index + 1}`;
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "secondary remove-row-button";
+    removeButton.textContent = "Delete Row";
+    removeButton.dataset.rowId = row.id;
+
+    head.append(rowIndex, removeButton);
+
+    const lyricsInput = document.createElement("textarea");
+    lyricsInput.className = "row-lyrics";
+    lyricsInput.dataset.rowId = row.id;
+    lyricsInput.dataset.field = "lyrics";
+    lyricsInput.value = row.lyrics;
+    lyricsInput.placeholder = "Lyrics line";
+
+    const meta = document.createElement("div");
+    meta.className = "row-meta";
+
+    const beatInput = document.createElement("input");
+    beatInput.type = "number";
+    beatInput.min = "1";
+    beatInput.max = "32";
+    beatInput.step = "1";
+    beatInput.className = "beat-input";
+    beatInput.dataset.rowId = row.id;
+    beatInput.dataset.field = "beat";
+    beatInput.value = String(row.beat);
+
+    const noteInput = document.createElement("input");
+    noteInput.type = "text";
+    noteInput.className = "note-input";
+    noteInput.dataset.rowId = row.id;
+    noteInput.dataset.field = "note";
+    noteInput.value = row.note;
+    noteInput.placeholder = "Note aligned to beat";
+
+    meta.append(beatInput, noteInput);
+    card.append(head, lyricsInput, meta);
+    rowsEditor.append(card);
+  });
+}
+
+function renderPreviewRows(file) {
+  previewLyrics.innerHTML = "";
+
+  for (const row of file.rows) {
+    const wrap = document.createElement("div");
+    wrap.className = "preview-row";
+    wrap.style.setProperty("--beats", String(clampBeat(row.beat)));
+
+    const lyricLine = document.createElement("div");
+    lyricLine.className = "preview-line lyric";
+    lyricLine.innerHTML = renderLine(row.lyrics || " ");
+
+    const noteLine = document.createElement("div");
+    noteLine.className = "preview-line note";
+    noteLine.textContent = row.note || " ";
+
+    wrap.append(lyricLine, noteLine);
+    previewLyrics.append(wrap);
+  }
+}
+
 function updateEditorFromSelection() {
   const file = getSelectedFile();
   if (!file) {
     fileNameInput.value = "";
     titleInput.value = "";
-    lyricsInput.value = "";
     fileNameInput.disabled = true;
     titleInput.disabled = true;
-    lyricsInput.disabled = true;
+    rowsEditor.innerHTML = "";
     previewTitle.textContent = "No file selected";
     previewLyrics.innerHTML = "";
     return;
@@ -332,25 +469,69 @@ function updateEditorFromSelection() {
 
   fileNameInput.disabled = false;
   titleInput.disabled = false;
-  lyricsInput.disabled = false;
 
   fileNameInput.value = file.name;
   titleInput.value = file.title;
-  lyricsInput.value = file.lyrics;
-
   previewTitle.textContent = file.title.trim() || "Untitled";
-  previewLyrics.innerHTML = renderLyrics(file.lyrics);
+
+  renderRowsEditor(file);
+  renderPreviewRows(file);
 }
 
-function saveEditorToSelection() {
+function saveHeaderToSelection() {
   const file = getSelectedFile();
   if (!file) {
     return;
   }
-
   file.name = fileNameInput.value.trim() || "untitled-file";
   file.title = titleInput.value;
-  file.lyrics = lyricsInput.value;
+}
+
+function addRowToSelectedFile() {
+  const file = getSelectedFile();
+  if (!file) {
+    return;
+  }
+  file.rows.push(createRow("", 8, ""));
+  renderRowsEditor(file);
+  renderPreviewRows(file);
+  scheduleAutosave();
+}
+
+function removeRowFromSelectedFile(rowId) {
+  const file = getSelectedFile();
+  if (!file) {
+    return;
+  }
+  file.rows = file.rows.filter((row) => row.id !== rowId);
+  if (file.rows.length === 0) {
+    file.rows = [createRow("", 8, "")];
+  }
+  renderRowsEditor(file);
+  renderPreviewRows(file);
+  scheduleAutosave();
+}
+
+function patchRowValue(rowId, field, value) {
+  const file = getSelectedFile();
+  if (!file) {
+    return;
+  }
+  const row = file.rows.find((item) => item.id === rowId);
+  if (!row) {
+    return;
+  }
+
+  if (field === "beat") {
+    row.beat = clampBeat(value);
+  } else if (field === "lyrics") {
+    row.lyrics = value;
+  } else if (field === "note") {
+    row.note = value;
+  }
+
+  renderPreviewRows(file);
+  scheduleAutosave();
 }
 
 function createFolder() {
@@ -361,9 +542,9 @@ function createFolder() {
     parentFolder = selected.parent;
   }
 
-  const focusedNode = findNodeWithParentById(workspace.tree, workspace.selectedNodeId);
-  if (focusedNode && focusedNode.node.type === "folder") {
-    parentFolder = focusedNode.node;
+  const focused = findNodeWithParentById(workspace.tree, workspace.selectedNodeId);
+  if (focused && focused.node.type === "folder") {
+    parentFolder = focused.node;
   }
 
   const name = window.prompt("Folder name:", "New Folder");
@@ -393,9 +574,9 @@ function createFile() {
     parentFolder = selected.parent;
   }
 
-  const focusedNode = findNodeWithParentById(workspace.tree, workspace.selectedNodeId);
-  if (focusedNode && focusedNode.node.type === "folder") {
-    parentFolder = focusedNode.node;
+  const focused = findNodeWithParentById(workspace.tree, workspace.selectedNodeId);
+  if (focused && focused.node.type === "folder") {
+    parentFolder = focused.node;
   }
 
   const name = window.prompt("File name:", "new-lyrics");
@@ -408,7 +589,7 @@ function createFile() {
     type: "file",
     name: name.trim() || "new-lyrics",
     title: "Untitled",
-    lyrics: "",
+    rows: [createRow("", 8, "")],
   };
 
   parentFolder.children.push(file);
@@ -427,9 +608,7 @@ function deleteSelectedNode() {
 
   const label = target.node.type === "folder" ? `folder \"${target.node.name}\"` : `file \"${target.node.name}\"`;
   const hasChildren = target.node.type === "folder" && target.node.children.length > 0;
-  const question = hasChildren
-    ? `Delete ${label} and all nested items?`
-    : `Delete ${label}?`;
+  const question = hasChildren ? `Delete ${label} and all nested items?` : `Delete ${label}?`;
 
   if (!window.confirm(question)) {
     return;
@@ -478,7 +657,6 @@ function moveNode(sourceId, targetId, dropInsideFolder) {
 
   const sourceHit = findNodeWithParentById(workspace.tree, sourceId);
   const targetHit = findNodeWithParentById(workspace.tree, targetId);
-
   if (!sourceHit || !sourceHit.parent || !targetHit) {
     return;
   }
@@ -508,8 +686,7 @@ function moveNode(sourceId, targetId, dropInsideFolder) {
 }
 
 function handleDragStart(event) {
-  const item = event.currentTarget;
-  dragSourceId = item.dataset.nodeId || null;
+  dragSourceId = event.currentTarget.dataset.nodeId || null;
   if (event.dataTransfer) {
     event.dataTransfer.effectAllowed = "move";
   }
@@ -517,8 +694,7 @@ function handleDragStart(event) {
 
 function handleDragOver(event) {
   event.preventDefault();
-  const item = event.currentTarget;
-  item.classList.add("drag-over");
+  event.currentTarget.classList.add("drag-over");
 }
 
 function handleDragLeave(event) {
@@ -532,7 +708,6 @@ function handleDrop(event) {
 
   const targetId = item.dataset.nodeId;
   const targetType = item.dataset.nodeType;
-
   if (!dragSourceId || !targetId || dragSourceId === targetId) {
     dragSourceId = null;
     return;
@@ -576,7 +751,7 @@ function createTreeNodeElement(node) {
 
   row.addEventListener("click", () => {
     if (node.type === "file") {
-      saveEditorToSelection();
+      saveHeaderToSelection();
       workspace.selectedFileId = node.id;
       workspace.selectedNodeId = node.id;
       renderAll();
@@ -622,9 +797,7 @@ function renderAll() {
 }
 
 function exportWorkspace() {
-  const blob = new Blob([JSON.stringify(workspace, null, 2)], {
-    type: "application/json",
-  });
+  const blob = new Blob([JSON.stringify(workspace, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
   anchor.href = url;
@@ -643,16 +816,13 @@ async function importWorkspaceFromFile(event) {
   }
 
   try {
-    const text = await file.text();
-    const parsed = JSON.parse(text);
+    const parsed = JSON.parse(await file.text());
     if (!isValidWorkspace(parsed)) {
       throw new Error("Invalid workspace format.");
     }
 
     workspace = parsed;
-    if (typeof workspace.selectedNodeId !== "string") {
-      workspace.selectedNodeId = workspace.selectedFileId;
-    }
+    normalizeWorkspaceData();
     ensureSelectedFile();
     renderAll();
     persistWorkspace();
@@ -673,38 +843,65 @@ function resetWorkspace() {
   showStatus("Workspace reset.");
 }
 
-function init() {
-  const fromCookie = loadWorkspaceFromCookies();
-  workspace = fromCookie || createDefaultWorkspace();
-  ensureSelectedFile();
-  expandedFolders.add("root");
-  renderAll();
-
+function bindEditorEvents() {
   fileNameInput.addEventListener("input", () => {
-    saveEditorToSelection();
+    saveHeaderToSelection();
     renderTree();
-    updateEditorFromSelection();
     scheduleAutosave();
   });
 
   titleInput.addEventListener("input", () => {
-    saveEditorToSelection();
-    updateEditorFromSelection();
+    saveHeaderToSelection();
+    const file = getSelectedFile();
+    if (file) {
+      previewTitle.textContent = file.title.trim() || "Untitled";
+    }
     scheduleAutosave();
   });
 
-  lyricsInput.addEventListener("input", () => {
-    saveEditorToSelection();
-    updateEditorFromSelection();
-    scheduleAutosave();
+  rowsEditor.addEventListener("input", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    const rowId = target.dataset.rowId;
+    const field = target.dataset.field;
+    if (!rowId || !field) {
+      return;
+    }
+
+    patchRowValue(rowId, field, target.value);
+
+    if (field === "beat") {
+      target.value = String(clampBeat(target.value));
+    }
   });
 
+  rowsEditor.addEventListener("click", (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) {
+      return;
+    }
+
+    if (target.classList.contains("remove-row-button")) {
+      const rowId = target.dataset.rowId;
+      if (rowId) {
+        removeRowFromSelectedFile(rowId);
+      }
+    }
+  });
+
+  addRowButton.addEventListener("click", addRowToSelectedFile);
+}
+
+function bindActionEvents() {
   newFolderButton.addEventListener("click", createFolder);
   newFileButton.addEventListener("click", createFile);
   deleteNodeButton.addEventListener("click", deleteSelectedNode);
 
   saveButton.addEventListener("click", () => {
-    saveEditorToSelection();
+    saveHeaderToSelection();
     persistWorkspace();
   });
 
@@ -718,6 +915,23 @@ function init() {
       resetWorkspace();
     }
   });
+
+  focusEditorButton.addEventListener("click", () => setLayoutMode("editor"));
+  focusPreviewButton.addEventListener("click", () => setLayoutMode("preview"));
+  normalLayoutButton.addEventListener("click", () => setLayoutMode("normal"));
+}
+
+function init() {
+  const fromCookie = loadWorkspaceFromCookies();
+  workspace = fromCookie || createDefaultWorkspace();
+
+  normalizeWorkspaceData();
+  ensureSelectedFile();
+  expandedFolders.add("root");
+  renderAll();
+
+  bindEditorEvents();
+  bindActionEvents();
 }
 
 init();

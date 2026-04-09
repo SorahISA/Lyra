@@ -49,6 +49,24 @@ body {
   align-items: start;
 }
 
+body.focus-editor .explorer-panel,
+body.focus-editor .preview-panel {
+  display: none;
+}
+
+body.focus-editor .editor-panel {
+  grid-column: 1 / -1;
+}
+
+body.focus-preview .explorer-panel,
+body.focus-preview .editor-panel {
+  display: none;
+}
+
+body.focus-preview .preview-panel {
+  grid-column: 1 / -1;
+}
+
 .panel {
   background: color-mix(in srgb, var(--paper) 88%, white);
   border: 1px solid var(--line);
@@ -208,6 +226,61 @@ textarea {
   font-family: var(--font-lyric);
 }
 
+.row-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
+.label.no-gap {
+  margin: 0;
+}
+
+.rows-editor {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.row-card {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fffdf8;
+  padding: 0.6rem;
+}
+
+.row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.4rem;
+}
+
+.row-index {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.row-lyrics {
+  min-height: 82px;
+  font-family: var(--font-lyric);
+  margin-bottom: 0.45rem;
+}
+
+.row-meta {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 0.45rem;
+}
+
+.beat-input,
+.note-input {
+  font-size: 0.92rem;
+}
+
 .help {
   margin-top: 0.7rem;
 }
@@ -238,10 +311,37 @@ textarea {
 }
 
 .lyrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.preview-row {
+  --beats: 8;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.preview-line {
   white-space: pre-wrap;
-  line-height: 2.1;
-  font-size: 1.06rem;
+  line-height: 1.9;
+  font-size: 1.03rem;
   font-family: var(--font-lyric);
+  padding: 0.52rem 0.62rem;
+  background-size: calc(100% / var(--beats)) 100%;
+  background-image: linear-gradient(
+    to right,
+    rgba(159, 47, 26, 0.14) 1px,
+    transparent 1px
+  );
+}
+
+.preview-line.note {
+  border-top: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 0.92rem;
+  background-color: #fffcf5;
 }
 
 ruby rt {

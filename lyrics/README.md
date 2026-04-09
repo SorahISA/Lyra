@@ -16,8 +16,11 @@ The left side is base text, right side is phonetic text rendered with `ruby/rt`.
 - Nested folder/file workspace
 - Create folders and files
 - Drag and drop files/folders to move them
-- Edit file name, title, and lyrics
+- Edit file name and title
+- Per-row editor: `lyrics + beat + note`
+- Row note line shown under lyrics and aligned with beat grid
 - Live preview with ruby annotations
+- Focus mode: maximize Editor or Preview
 - Cookie-based persistence (no backend)
 - Export/import full workspace JSON
 

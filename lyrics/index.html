@@ -32,9 +32,10 @@
       <div class="panel-header">
         <h2>Editor</h2>
         <div class="actions wrap">
+          <button id="focusEditorButton" type="button" class="secondary">Max Editor</button>
           <button id="saveButton" type="button">Save</button>
-          <button id="exportButton" type="button" class="secondary">Export</button>
-          <button id="importButton" type="button" class="secondary">Import</button>
+          <button id="exportButton" type="button" class="secondary">Export Workspace</button>
+          <button id="importButton" type="button" class="secondary">Import Workspace</button>
           <button id="resetButton" type="button" class="secondary">Reset</button>
         </div>
       </div>
@@ -45,14 +46,17 @@
       <label class="label" for="titleInput">Song title</label>
       <input id="titleInput" type="text" placeholder="Song title" />
 
-      <label class="label" for="lyricsInput">Lyrics source</label>
-      <textarea id="lyricsInput" spellcheck="false" placeholder="Type lyrics here..."></textarea>
+      <div class="row-toolbar">
+        <p class="label no-gap">Rows (lyrics / beat / note)</p>
+        <button id="addRowButton" type="button" class="secondary">+ Row</button>
+      </div>
+      <div id="rowsEditor" class="rows-editor"></div>
 
       <details class="help">
         <summary>Syntax help</summary>
         <ul>
           <li><code>[漢字|かな]</code> renders as ruby text.</li>
-          <li>Normal text and new lines are preserved.</li>
+          <li>Each row can set its own beat count and note line.</li>
         </ul>
       </details>
 
@@ -63,6 +67,10 @@
     <section class="panel preview-panel">
       <div class="panel-header">
         <h2>Preview</h2>
+        <div class="actions">
+          <button id="focusPreviewButton" type="button" class="secondary">Max Preview</button>
+          <button id="normalLayoutButton" type="button" class="secondary">Normal</button>
+        </div>
       </div>
       <article>
         <h3 id="previewTitle"></h3>
