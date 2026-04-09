@@ -8,6 +8,8 @@ const treeRoot = document.getElementById("treeRoot");
 const fileNameInput = document.getElementById("fileNameInput");
 const titleInput = document.getElementById("titleInput");
 const lyricsEditor = document.getElementById("lyricsEditor");
+const lineNumbers = document.getElementById("lineNumbers");
+const lineNumbersContent = document.getElementById("lineNumbersContent");
 const previewTitle = document.getElementById("previewTitle");
 const previewLyrics = document.getElementById("previewLyrics");
 
@@ -21,7 +23,9 @@ const importButton = document.getElementById("importButton");
 const resetButton = document.getElementById("resetButton");
 
 const focusEditorButton = document.getElementById("focusEditorButton");
+const normalEditorButton = document.getElementById("normalEditorButton");
 const focusPreviewButton = document.getElementById("focusPreviewButton");
+const compactPreviewButton = document.getElementById("compactPreviewButton");
 const normalLayoutButton = document.getElementById("normalLayoutButton");
 
 const importFileInput = document.getElementById("importFileInput");
@@ -419,6 +423,12 @@ function setLayoutMode(mode) {
   }
 }
 
+function setCompactPreview(enabled) {
+  document.body.classList.toggle("compact-preview", enabled);
+  compactPreviewButton.setAttribute("aria-pressed", enabled ? "true" : "false");
+  compactPreviewButton.textContent = enabled ? "Compact On" : "Compact";
+}
+
 function rowsToEditorText(rows) {
   const lines = [];
   for (const row of rows) {
@@ -447,6 +457,21 @@ function editorTextToRows(text, previousRows = []) {
   }
 
   return rows;
+}
+
+function refreshLineNumbers() {
+  const lineCount = Math.max(1, lyricsEditor.value.split("\n").length);
+  const numbers = [];
+  for (let i = 1; i <= lineCount; i += 1) {
+    if (i % 2 === 1) {
+      numbers.push(String((i + 1) / 2));
+    } else {
+      numbers.push("");
+    }
+  }
+  lineNumbersContent.textContent = numbers.join("\n");
+  lineNumbersContent.style.transform = `translateY(${-lyricsEditor.scrollTop}px)`;
+  lineNumbers.style.backgroundPositionY = `${-lyricsEditor.scrollTop}px`;
 }
 
 function renderPreviewRows(file) {
@@ -478,6 +503,7 @@ function updateEditorFromSelection() {
     titleInput.disabled = true;
     lyricsEditor.value = "";
     lyricsEditor.disabled = true;
+    refreshLineNumbers();
     previewTitle.textContent = "No file selected";
     previewLyrics.innerHTML = "";
     return;
@@ -490,6 +516,7 @@ function updateEditorFromSelection() {
   fileNameInput.value = file.name;
   titleInput.value = file.title;
   lyricsEditor.value = rowsToEditorText(file.rows);
+  refreshLineNumbers();
   previewTitle.textContent = file.title.trim() || "Untitled";
 
   renderPreviewRows(file);
@@ -850,6 +877,12 @@ function bindEditorEvents() {
 
   lyricsEditor.addEventListener("input", () => {
     syncEditorToSelectedFile();
+    refreshLineNumbers();
+  });
+
+  lyricsEditor.addEventListener("scroll", () => {
+    lineNumbersContent.style.transform = `translateY(${-lyricsEditor.scrollTop}px)`;
+    lineNumbers.style.backgroundPositionY = `${-lyricsEditor.scrollTop}px`;
   });
 
   lyricsEditor.addEventListener("keydown", (event) => {
@@ -916,7 +949,11 @@ function bindActionEvents() {
   });
 
   focusEditorButton.addEventListener("click", () => setLayoutMode("editor"));
+  normalEditorButton.addEventListener("click", () => setLayoutMode("normal"));
   focusPreviewButton.addEventListener("click", () => setLayoutMode("preview"));
+  compactPreviewButton.addEventListener("click", () => {
+    setCompactPreview(!document.body.classList.contains("compact-preview"));
+  });
   normalLayoutButton.addEventListener("click", () => setLayoutMode("normal"));
 }
 
@@ -941,6 +978,8 @@ function init() {
 
   bindEditorEvents();
   bindActionEvents();
+  refreshLineNumbers();
+  setCompactPreview(false);
 }
 
 init();

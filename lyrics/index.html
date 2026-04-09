@@ -33,6 +33,7 @@
         <h2>Editor</h2>
         <div class="actions wrap">
           <button id="focusEditorButton" type="button" class="secondary">Max Editor</button>
+          <button id="normalEditorButton" type="button" class="secondary">Normal</button>
           <button id="saveButton" type="button">Save</button>
           <button id="exportButton" type="button" class="secondary">Export Workspace</button>
           <button id="importButton" type="button" class="secondary">Import Workspace</button>
@@ -47,7 +48,10 @@
       <input id="titleInput" type="text" placeholder="Song title" />
 
       <label class="label" for="lyricsEditor">Lyrics Editor</label>
-      <textarea id="lyricsEditor" class="lyrics-editor" spellcheck="false" placeholder="Odd lines: lyrics&#10;Even lines: comments"></textarea>
+      <div class="editor-shell">
+        <pre id="lineNumbers" class="line-numbers" aria-hidden="true"><span id="lineNumbersContent" class="line-numbers-content"></span></pre>
+        <textarea id="lyricsEditor" class="lyrics-editor" spellcheck="false" placeholder="Odd lines: lyrics&#10;Even lines: comments"></textarea>
+      </div>
 
       <details class="help">
         <summary>Syntax help</summary>
@@ -69,6 +73,7 @@
         <h2>Preview</h2>
         <div class="actions">
           <button id="focusPreviewButton" type="button" class="secondary">Max Preview</button>
+          <button id="compactPreviewButton" type="button" class="secondary">Compact</button>
           <button id="normalLayoutButton" type="button" class="secondary">Normal</button>
         </div>
       </div>
