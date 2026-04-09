@@ -15,9 +15,11 @@ const previewLyrics = document.getElementById("previewLyrics");
 
 const newFolderButton = document.getElementById("newFolderButton");
 const newFileButton = document.getElementById("newFileButton");
+const renameFolderButton = document.getElementById("renameFolderButton");
+const moveUpButton = document.getElementById("moveUpButton");
+const moveDownButton = document.getElementById("moveDownButton");
 const deleteNodeButton = document.getElementById("deleteNodeButton");
 
-const saveButton = document.getElementById("saveButton");
 const exportButton = document.getElementById("exportButton");
 const importButton = document.getElementById("importButton");
 const resetButton = document.getElementById("resetButton");
@@ -563,15 +565,10 @@ function createFolder() {
     parentFolder = focused.node;
   }
 
-  const name = window.prompt("Folder name:", "New Folder");
-  if (!name) {
-    return;
-  }
-
   const folder = {
     id: createId(),
     type: "folder",
-    name: name.trim() || "New Folder",
+    name: "new-folder",
     children: [],
   };
 
@@ -595,15 +592,10 @@ function createFile() {
     parentFolder = focused.node;
   }
 
-  const name = window.prompt("File name:", "new-lyrics");
-  if (!name) {
-    return;
-  }
-
   const file = {
     id: createId(),
     type: "file",
-    name: name.trim() || "new-lyrics",
+    name: "new-lyrics",
     title: "Untitled",
     rows: [createRow("", "")],
   };
@@ -613,6 +605,54 @@ function createFile() {
   workspace.selectedNodeId = file.id;
   expandedFolders.add(parentFolder.id);
   renderAll();
+  scheduleAutosave();
+}
+
+function renameSelectedFolder() {
+  const hit = findNodeWithParentById(workspace.tree, workspace.selectedNodeId);
+  if (!hit || hit.node.type !== "folder") {
+    showStatus("Select a folder to rename.");
+    return;
+  }
+
+  if (hit.node.id === "root") {
+    showStatus("Root folder cannot be renamed.");
+    return;
+  }
+
+  const nextName = window.prompt("Folder name:", hit.node.name);
+  if (!nextName) {
+    return;
+  }
+
+  hit.node.name = nextName.trim() || hit.node.name;
+  renderTree();
+  scheduleAutosave();
+}
+
+function moveSelectedFile(delta) {
+  const hit = findNodeWithParentById(workspace.tree, workspace.selectedNodeId);
+  if (!hit || !hit.parent || hit.node.type !== "file") {
+    showStatus("Select a file to reorder.");
+    return;
+  }
+
+  const siblings = hit.parent.children;
+  const index = siblings.findIndex((child) => child.id === hit.node.id);
+  if (index === -1) {
+    return;
+  }
+
+  const nextIndex = index + delta;
+  if (nextIndex < 0 || nextIndex >= siblings.length) {
+    return;
+  }
+
+  const temp = siblings[index];
+  siblings[index] = siblings[nextIndex];
+  siblings[nextIndex] = temp;
+
+  renderTree();
   scheduleAutosave();
 }
 
@@ -666,7 +706,8 @@ function isDescendantFolder(folderNode, candidateId) {
   return false;
 }
 
-function moveNode(sourceId, targetId, dropInsideFolder) {
+function moveNode(sourceId, targetId, options = {}) {
+  const { dropInsideFolder = false, placeBefore = false } = options;
   if (!sourceId || !targetId || sourceId === "root") {
     return;
   }
@@ -693,7 +734,8 @@ function moveNode(sourceId, targetId, dropInsideFolder) {
       workspace.tree.children.push(sourceHit.node);
     } else {
       const index = parent.children.findIndex((child) => child.id === targetHit.node.id);
-      parent.children.splice(index + 1, 0, sourceHit.node);
+      const insertAt = placeBefore ? index : index + 1;
+      parent.children.splice(insertAt, 0, sourceHit.node);
     }
   }
 
@@ -710,17 +752,29 @@ function handleDragStart(event) {
 
 function handleDragOver(event) {
   event.preventDefault();
-  event.currentTarget.classList.add("drag-over");
+  const item = event.currentTarget;
+  item.classList.remove("drag-over", "drag-over-before", "drag-over-after");
+
+  const targetType = item.dataset.nodeType;
+  if (targetType === "folder") {
+    item.classList.add("drag-over");
+    return;
+  }
+
+  const rect = item.getBoundingClientRect();
+  const isBefore = event.clientY < rect.top + rect.height / 2;
+  item.classList.add(isBefore ? "drag-over-before" : "drag-over-after");
 }
 
 function handleDragLeave(event) {
-  event.currentTarget.classList.remove("drag-over");
+  event.currentTarget.classList.remove("drag-over", "drag-over-before", "drag-over-after");
 }
 
 function handleDrop(event) {
   event.preventDefault();
   const item = event.currentTarget;
-  item.classList.remove("drag-over");
+  const placeBefore = item.classList.contains("drag-over-before");
+  item.classList.remove("drag-over", "drag-over-before", "drag-over-after");
 
   const targetId = item.dataset.nodeId;
   const targetType = item.dataset.nodeType;
@@ -729,7 +783,10 @@ function handleDrop(event) {
     return;
   }
 
-  moveNode(dragSourceId, targetId, targetType === "folder");
+  moveNode(dragSourceId, targetId, {
+    dropInsideFolder: targetType === "folder",
+    placeBefore,
+  });
   dragSourceId = null;
 }
 
@@ -930,12 +987,10 @@ function bindEditorEvents() {
 function bindActionEvents() {
   newFolderButton.addEventListener("click", createFolder);
   newFileButton.addEventListener("click", createFile);
+  renameFolderButton.addEventListener("click", renameSelectedFolder);
+  moveUpButton.addEventListener("click", () => moveSelectedFile(-1));
+  moveDownButton.addEventListener("click", () => moveSelectedFile(1));
   deleteNodeButton.addEventListener("click", deleteSelectedNode);
-
-  saveButton.addEventListener("click", () => {
-    saveHeaderToSelection();
-    persistWorkspace();
-  });
 
   exportButton.addEventListener("click", exportWorkspace);
   importButton.addEventListener("click", () => importFileInput.click());

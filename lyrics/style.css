@@ -195,6 +195,14 @@ button.secondary:hover {
   background: #eaf8f0;
 }
 
+.tree-item.drag-over-before {
+  border-top: 2px solid color-mix(in srgb, var(--ok) 75%, white);
+}
+
+.tree-item.drag-over-after {
+  border-bottom: 2px solid color-mix(in srgb, var(--ok) 75%, white);
+}
+
 .tree-item[draggable="true"] {
   cursor: grab;
 }
