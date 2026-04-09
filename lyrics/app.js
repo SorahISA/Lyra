@@ -183,7 +183,16 @@ function clampBeat(value) {
   return Math.max(1, Math.min(32, n));
 }
 
-function normalizeFileNode(node) {
+function normalizeFileNode(node, seen = new WeakSet()) {
+  if (!node || typeof node !== "object") {
+    return null;
+  }
+
+  if (seen.has(node)) {
+    return null;
+  }
+  seen.add(node);
+
   if (node.type === "file") {
     if (!Array.isArray(node.rows)) {
       const legacyLyrics = typeof node.lyrics === "string" ? node.lyrics : "";
@@ -211,17 +220,44 @@ function normalizeFileNode(node) {
     if (typeof node.title !== "string") {
       node.title = "Untitled";
     }
-    return;
+    return node;
+  }
+
+  if (node.type !== "folder") {
+    node.type = "folder";
+    node.name = typeof node.name === "string" ? node.name : "Folder";
+    node.children = [];
+    return node;
+  }
+
+  if (typeof node.name !== "string") {
+    node.name = "Folder";
   }
 
   if (!Array.isArray(node.children)) {
     node.children = [];
   }
-  node.children.forEach((child) => normalizeFileNode(child));
+  const normalizedChildren = [];
+  for (const child of node.children) {
+    const normalizedChild = normalizeFileNode(child, seen);
+    if (!normalizedChild) {
+      continue;
+    }
+    if (normalizedChild.type === "file" || normalizedChild.type === "folder") {
+      normalizedChildren.push(normalizedChild);
+    }
+  }
+  node.children = normalizedChildren;
+  return node;
 }
 
 function normalizeWorkspaceData() {
-  normalizeFileNode(workspace.tree);
+  const normalizedRoot = normalizeFileNode(workspace.tree);
+  if (!normalizedRoot || normalizedRoot.type !== "folder") {
+    throw new Error("Invalid workspace root");
+  }
+  normalizedRoot.id = "root";
+  workspace.tree = normalizedRoot;
   if (typeof workspace.selectedNodeId !== "string") {
     workspace.selectedNodeId = workspace.selectedFileId;
   }
@@ -922,13 +958,23 @@ function bindActionEvents() {
 }
 
 function init() {
-  const fromCookie = loadWorkspaceFromCookies();
-  workspace = fromCookie || createDefaultWorkspace();
+  try {
+    const fromCookie = loadWorkspaceFromCookies();
+    workspace = fromCookie || createDefaultWorkspace();
 
-  normalizeWorkspaceData();
-  ensureSelectedFile();
-  expandedFolders.add("root");
-  renderAll();
+    normalizeWorkspaceData();
+    ensureSelectedFile();
+    expandedFolders.add("root");
+    renderAll();
+  } catch {
+    clearWorkspaceCookies();
+    workspace = createDefaultWorkspace();
+    normalizeWorkspaceData();
+    ensureSelectedFile();
+    expandedFolders.add("root");
+    renderAll();
+    showStatus("Workspace data was corrupted and has been reset.");
+  }
 
   bindEditorEvents();
   bindActionEvents();
