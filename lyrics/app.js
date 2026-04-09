@@ -22,7 +22,6 @@ const deleteNodeButton = document.getElementById("deleteNodeButton");
 
 const exportButton = document.getElementById("exportButton");
 const importButton = document.getElementById("importButton");
-const resetButton = document.getElementById("resetButton");
 
 const focusEditorButton = document.getElementById("focusEditorButton");
 const normalEditorButton = document.getElementById("normalEditorButton");
@@ -35,6 +34,7 @@ const status = document.getElementById("status");
 
 let autosaveTimer = null;
 let dragSourceId = null;
+let hasUnsavedOversizeChanges = false;
 const expandedFolders = new Set(["root"]);
 let workspace = createDefaultWorkspace();
 
@@ -409,9 +409,14 @@ function scheduleAutosave() {
 function persistWorkspace() {
   try {
     saveWorkspaceToCookies(workspace);
+    hasUnsavedOversizeChanges = false;
     showStatus("Saved to cookies.");
   } catch (error) {
-    showStatus(error instanceof Error ? error.message : "Save failed.");
+    const message = error instanceof Error ? error.message : "Save failed.";
+    if (message.includes("Workspace too large")) {
+      hasUnsavedOversizeChanges = true;
+    }
+    showStatus(message);
   }
 }
 
@@ -472,8 +477,9 @@ function refreshLineNumbers() {
     }
   }
   lineNumbersContent.textContent = numbers.join("\n");
-  lineNumbersContent.style.transform = `translateY(${-lyricsEditor.scrollTop}px)`;
-  lineNumbers.style.backgroundPositionY = `${-lyricsEditor.scrollTop}px`;
+  const y = Math.round(lyricsEditor.scrollTop);
+  lineNumbersContent.style.transform = `translateY(${-y}px)`;
+  lineNumbers.style.backgroundPositionY = `${-y}px`;
 }
 
 function renderPreviewRows(file) {
@@ -938,8 +944,9 @@ function bindEditorEvents() {
   });
 
   lyricsEditor.addEventListener("scroll", () => {
-    lineNumbersContent.style.transform = `translateY(${-lyricsEditor.scrollTop}px)`;
-    lineNumbers.style.backgroundPositionY = `${-lyricsEditor.scrollTop}px`;
+    const y = Math.round(lyricsEditor.scrollTop);
+    lineNumbersContent.style.transform = `translateY(${-y}px)`;
+    lineNumbers.style.backgroundPositionY = `${-y}px`;
   });
 
   lyricsEditor.addEventListener("keydown", (event) => {
@@ -982,6 +989,7 @@ function bindEditorEvents() {
       wrapSelection(target, `{${hex}}`, "{/color}");
     }
   });
+
 }
 
 function bindActionEvents() {
@@ -996,13 +1004,6 @@ function bindActionEvents() {
   importButton.addEventListener("click", () => importFileInput.click());
   importFileInput.addEventListener("change", importWorkspaceFromFile);
 
-  resetButton.addEventListener("click", () => {
-    if (window.confirm("Reset workspace to demo content?")) {
-      clearWorkspaceCookies();
-      resetWorkspace();
-    }
-  });
-
   focusEditorButton.addEventListener("click", () => setLayoutMode("editor"));
   normalEditorButton.addEventListener("click", () => setLayoutMode("normal"));
   focusPreviewButton.addEventListener("click", () => setLayoutMode("preview"));
@@ -1010,6 +1011,14 @@ function bindActionEvents() {
     setCompactPreview(!document.body.classList.contains("compact-preview"));
   });
   normalLayoutButton.addEventListener("click", () => setLayoutMode("normal"));
+
+  window.addEventListener("beforeunload", (event) => {
+    if (!hasUnsavedOversizeChanges) {
+      return;
+    }
+    event.preventDefault();
+    event.returnValue = "";
+  });
 }
 
 function init() {

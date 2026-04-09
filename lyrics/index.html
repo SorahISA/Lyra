@@ -9,7 +9,6 @@
 <body>
   <header class="header">
     <h1>Lyra Lyrics Workspace</h1>
-    <p>Phonetic syntax: <code>[天球|そら]</code> or <code>[シルエットダンス|silhouette dance]</code></p>
   </header>
 
   <main class="layout">
@@ -24,6 +23,8 @@
         <button id="renameFolderButton" type="button" class="secondary">Rename Folder</button>
         <button id="moveUpButton" type="button" class="secondary">Move Up</button>
         <button id="moveDownButton" type="button" class="secondary">Move Down</button>
+        <button id="exportButton" type="button" class="secondary">Export Workspace</button>
+        <button id="importButton" type="button" class="secondary">Import Workspace</button>
         <button id="deleteNodeButton" type="button" class="secondary">Delete</button>
       </div>
 
@@ -37,17 +38,19 @@
         <div class="actions wrap">
           <button id="focusEditorButton" type="button" class="secondary">Max Editor</button>
           <button id="normalEditorButton" type="button" class="secondary">Normal</button>
-          <button id="exportButton" type="button" class="secondary">Export Workspace</button>
-          <button id="importButton" type="button" class="secondary">Import Workspace</button>
-          <button id="resetButton" type="button" class="secondary">Reset</button>
         </div>
       </div>
 
-      <label class="label" for="fileNameInput">File name</label>
-      <input id="fileNameInput" type="text" placeholder="lyrics-file" />
-
-      <label class="label" for="titleInput">Song title</label>
-      <input id="titleInput" type="text" placeholder="Song title" />
+      <div class="meta-grid">
+        <div>
+          <label class="label" for="fileNameInput">File name</label>
+          <input id="fileNameInput" type="text" placeholder="lyrics-file" />
+        </div>
+        <div>
+          <label class="label" for="titleInput">Song title</label>
+          <input id="titleInput" type="text" placeholder="Song title" />
+        </div>
+      </div>
 
       <label class="label" for="lyricsEditor">Lyrics Editor</label>
       <div class="editor-shell">
@@ -74,8 +77,8 @@
       <div class="panel-header">
         <h2>Preview</h2>
         <div class="actions">
-          <button id="focusPreviewButton" type="button" class="secondary">Max Preview</button>
           <button id="compactPreviewButton" type="button" class="secondary">Compact</button>
+          <button id="focusPreviewButton" type="button" class="secondary">Max Preview</button>
           <button id="normalLayoutButton" type="button" class="secondary">Normal</button>
         </div>
       </div>

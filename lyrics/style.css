@@ -21,12 +21,18 @@ body {
   color: var(--ink);
   font-family: var(--font-ui);
   min-height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .header {
+  flex: 0 0 auto;
   max-width: 1300px;
   margin: 0 auto;
   padding: 1.25rem 1rem 0.85rem;
+  width: 100%;
 }
 
 .header h1 {
@@ -40,13 +46,18 @@ body {
 }
 
 .layout {
+  flex: 1 1 auto;
   max-width: 1300px;
   margin: 0 auto;
   padding: 0 1rem 1rem;
   display: grid;
   grid-template-columns: 320px minmax(360px, 1fr) minmax(280px, 1fr);
   gap: 1rem;
-  align-items: start;
+  align-items: stretch;
+  grid-auto-rows: 1fr;
+  height: 100%;
+  min-height: 0;
+  width: 100%;
 }
 
 body.focus-editor .explorer-panel,
@@ -73,6 +84,19 @@ body.focus-preview .preview-panel {
   border-radius: 14px;
   padding: 0.9rem;
   box-shadow: 0 8px 28px rgba(31, 30, 26, 0.06);
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.explorer-panel,
+.preview-panel {
+  overflow: auto;
+}
+
+.editor-panel {
+  overflow: auto;
 }
 
 .panel-header {
@@ -138,7 +162,7 @@ button.secondary:hover {
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 0.4rem;
-  min-height: 430px;
+  min-height: 220px;
   overflow: auto;
 }
 
@@ -218,6 +242,12 @@ button.secondary:hover {
   color: var(--muted);
 }
 
+.meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
 input,
 select,
 textarea {
@@ -237,27 +267,26 @@ textarea {
 }
 
 .lyrics-editor {
-  --line-h: 1.55rem;
   margin-top: 0.2rem;
-  min-height: 380px;
+  min-height: 560px;
   resize: vertical;
   line-height: var(--line-h);
   font-family: "JetBrains Mono", "Consolas", "Menlo", "Monaco", monospace;
+  font-size: 14px;
   white-space: pre;
   tab-size: 2;
   padding: 0 0.6rem;
   background-color: #fff;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    #ffffff 0 var(--line-h),
-    #f1f1f1 var(--line-h) calc(var(--line-h) * 2)
-  );
+  background-image: linear-gradient(to bottom, #ffffff 0 24px, #f1f1f1 24px 48px);
+  background-size: 100% 48px;
+  background-repeat: repeat-y;
   background-attachment: local;
   background-origin: content-box;
   background-clip: content-box;
 }
 
 .editor-shell {
+  --line-h: 24px;
   margin-top: 0.2rem;
   display: grid;
   grid-template-columns: 3.3rem 1fr;
@@ -265,21 +294,22 @@ textarea {
   border-radius: 10px;
   overflow: hidden;
   background: #fff;
+  height: 520px;
+  min-height: 520px;
 }
 
 .line-numbers {
   margin: 0;
   padding: 0 0.45rem 0 0;
   text-align: right;
-  line-height: 1.55rem;
+  line-height: var(--line-h);
   font-family: "JetBrains Mono", "Consolas", "Menlo", "Monaco", monospace;
+  font-size: 14px;
   color: #8a857b;
   background-color: #fff;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    #ffffff 0 1.55rem,
-    #f1f1f1 1.55rem 3.1rem
-  );
+  background-image: linear-gradient(to bottom, #ffffff 0 24px, #f1f1f1 24px 48px);
+  background-size: 100% 48px;
+  background-repeat: repeat-y;
   background-attachment: scroll;
   border-right: 1px solid var(--line);
   user-select: none;
@@ -301,9 +331,14 @@ textarea {
 
 .lyrics-editor {
   margin-top: 0;
-  min-height: 380px;
+  min-height: 0;
+  height: 100%;
   border: none;
   border-radius: 0;
+  line-height: var(--line-h);
+  padding-bottom: var(--line-h);
+  resize: vertical;
+  overflow: auto;
 }
 
 .help {
@@ -326,7 +361,7 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 1rem;
-  min-height: 500px;
+  min-height: 220px;
 }
 
 #previewTitle {
@@ -446,12 +481,16 @@ ruby rt {
     grid-template-columns: 1fr;
   }
 
+  .meta-grid {
+    grid-template-columns: 1fr;
+  }
+
   .tree {
     min-height: 220px;
   }
 
-  textarea {
-    min-height: 230px;
+  .lyrics-editor {
+    min-height: 340px;
   }
 
   .preview-panel article {
