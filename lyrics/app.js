@@ -32,6 +32,7 @@ let autosaveTimer = null;
 let dragSourceId = null;
 const expandedFolders = new Set(["root"]);
 let workspace = createDefaultWorkspace();
+const EVENT_TYPES = ["sing", "hey", "clap", "color", "uo", "call"];
 
 function createId() {
   return `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
@@ -43,6 +44,15 @@ function createRow(lyrics = "", beat = 8, note = "") {
     lyrics,
     beat,
     note,
+    events: [],
+  };
+}
+
+function createEvent(type = "call", detail = "") {
+  return {
+    id: createId(),
+    type,
+    detail,
   };
 }
 
@@ -203,12 +213,28 @@ function normalizeFileNode(node, seen = new WeakSet()) {
       delete node.lyrics;
     }
 
-    node.rows = node.rows.map((row) => ({
-      id: typeof row.id === "string" ? row.id : createId(),
-      lyrics: typeof row.lyrics === "string" ? row.lyrics : "",
-      beat: clampBeat(row.beat),
-      note: typeof row.note === "string" ? row.note : "",
-    }));
+    node.rows = node.rows.map((row) => {
+      const events = Array.isArray(row.events)
+        ? row.events
+            .map((event) => ({
+              id: typeof event.id === "string" ? event.id : createId(),
+              type:
+                typeof event.type === "string" && EVENT_TYPES.includes(event.type)
+                  ? event.type
+                  : "call",
+              detail: typeof event.detail === "string" ? event.detail : "",
+            }))
+            .slice(0, 20)
+        : [];
+
+      return {
+        id: typeof row.id === "string" ? row.id : createId(),
+        lyrics: typeof row.lyrics === "string" ? row.lyrics : "",
+        beat: clampBeat(row.beat),
+        note: typeof row.note === "string" ? row.note : "",
+        events,
+      };
+    });
 
     if (node.rows.length === 0) {
       node.rows = [createRow("", 8, "")];
@@ -272,6 +298,19 @@ function escapeHtml(text) {
     .replaceAll("'", "&#39;");
 }
 
+function renderStyledText(rawText) {
+  let output = escapeHtml(rawText);
+
+  output = output.replace(
+    /\{(red|blue|green|yellow|pink|orange)\}(.+?)\{\/\1\}/g,
+    '<span class="tint-$1">$2</span>',
+  );
+  output = output.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+  output = output.replace(/__(.+?)__/g, "<u>$1</u>");
+
+  return output;
+}
+
 function renderLine(line) {
   const pieces = [];
   let i = 0;
@@ -279,11 +318,11 @@ function renderLine(line) {
   while (i < line.length) {
     const open = line.indexOf("[", i);
     if (open === -1) {
-      pieces.push(escapeHtml(line.slice(i)));
+      pieces.push(renderStyledText(line.slice(i)));
       break;
     }
 
-    pieces.push(escapeHtml(line.slice(i, open)));
+    pieces.push(renderStyledText(line.slice(i, open)));
 
     const close = line.indexOf("]", open + 1);
     if (close === -1) {
@@ -294,7 +333,7 @@ function renderLine(line) {
     const inner = line.slice(open + 1, close);
     const separator = inner.indexOf("|");
     if (separator === -1) {
-      pieces.push(escapeHtml(line.slice(open, close + 1)));
+      pieces.push(renderStyledText(line.slice(open, close + 1)));
       i = close + 1;
       continue;
     }
@@ -302,12 +341,12 @@ function renderLine(line) {
     const base = inner.slice(0, separator).trim();
     const phonetic = inner.slice(separator + 1).trim();
     if (!base || !phonetic) {
-      pieces.push(escapeHtml(line.slice(open, close + 1)));
+      pieces.push(renderStyledText(line.slice(open, close + 1)));
       i = close + 1;
       continue;
     }
 
-    pieces.push(`<ruby>${escapeHtml(base)}<rt>${escapeHtml(phonetic)}</rt></ruby>`);
+    pieces.push(`<ruby>${renderStyledText(base)}<rt>${renderStyledText(phonetic)}</rt></ruby>`);
     i = close + 1;
   }
 
@@ -463,8 +502,66 @@ function renderRowsEditor(file) {
     noteInput.value = row.note;
     noteInput.placeholder = "Note aligned to beat";
 
+    const eventsEditor = document.createElement("div");
+    eventsEditor.className = "events-editor";
+
+    const eventsHead = document.createElement("div");
+    eventsHead.className = "events-head";
+    eventsHead.textContent = "Events";
+
+    const createLine = document.createElement("div");
+    createLine.className = "event-create";
+
+    const eventTypeSelect = document.createElement("select");
+    eventTypeSelect.className = "event-type-input";
+    eventTypeSelect.dataset.rowId = row.id;
+    for (const type of EVENT_TYPES) {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type.toUpperCase();
+      eventTypeSelect.append(option);
+    }
+
+    const eventDetailInput = document.createElement("input");
+    eventDetailInput.type = "text";
+    eventDetailInput.className = "event-detail-input";
+    eventDetailInput.placeholder = "detail (e.g. pink, 2x, short call)";
+    eventDetailInput.dataset.rowId = row.id;
+
+    const addEventButton = document.createElement("button");
+    addEventButton.type = "button";
+    addEventButton.className = "secondary add-event-button";
+    addEventButton.dataset.rowId = row.id;
+    addEventButton.textContent = "+ Event";
+
+    createLine.append(eventTypeSelect, eventDetailInput, addEventButton);
+
+    const eventList = document.createElement("div");
+    eventList.className = "event-list";
+    for (const event of row.events || []) {
+      const chip = document.createElement("span");
+      chip.className = `event-chip event-${event.type}`;
+
+      const text = event.detail
+        ? `${event.type.toUpperCase()}: ${event.detail}`
+        : event.type.toUpperCase();
+      chip.textContent = text;
+
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "event-remove";
+      remove.dataset.rowId = row.id;
+      remove.dataset.eventId = event.id;
+      remove.textContent = "x";
+
+      chip.append(remove);
+      eventList.append(chip);
+    }
+
+    eventsEditor.append(eventsHead, createLine, eventList);
+
     meta.append(beatInput, noteInput);
-    card.append(head, lyricsInput, meta);
+    card.append(head, lyricsInput, meta, eventsEditor);
     rowsEditor.append(card);
   });
 }
@@ -483,7 +580,23 @@ function renderPreviewRows(file) {
 
     const noteLine = document.createElement("div");
     noteLine.className = "preview-line note";
-    noteLine.textContent = row.note || " ";
+    noteLine.innerHTML = renderStyledText(row.note || " ");
+
+    const events = row.events || [];
+    const eventLine = document.createElement("div");
+    eventLine.className = "preview-events";
+    for (const event of events) {
+      const badge = document.createElement("span");
+      badge.className = `preview-event event-${event.type}`;
+      badge.textContent = event.detail
+        ? `${event.type.toUpperCase()}: ${event.detail}`
+        : event.type.toUpperCase();
+      eventLine.append(badge);
+    }
+
+    if (events.length > 0) {
+      wrap.append(eventLine);
+    }
 
     wrap.append(lyricLine, noteLine);
     previewLyrics.append(wrap);
@@ -543,6 +656,44 @@ function removeRowFromSelectedFile(rowId) {
   if (file.rows.length === 0) {
     file.rows = [createRow("", 8, "")];
   }
+  renderRowsEditor(file);
+  renderPreviewRows(file);
+  scheduleAutosave();
+}
+
+function addEventToRow(rowId, type, detail) {
+  const file = getSelectedFile();
+  if (!file) {
+    return;
+  }
+
+  const row = file.rows.find((item) => item.id === rowId);
+  if (!row) {
+    return;
+  }
+
+  const safeType = EVENT_TYPES.includes(type) ? type : "call";
+  row.events = Array.isArray(row.events) ? row.events : [];
+  row.events.push(createEvent(safeType, detail.trim()));
+  row.events = row.events.slice(-20);
+
+  renderRowsEditor(file);
+  renderPreviewRows(file);
+  scheduleAutosave();
+}
+
+function removeEventFromRow(rowId, eventId) {
+  const file = getSelectedFile();
+  if (!file) {
+    return;
+  }
+
+  const row = file.rows.find((item) => item.id === rowId);
+  if (!row) {
+    return;
+  }
+
+  row.events = (row.events || []).filter((event) => event.id !== eventId);
   renderRowsEditor(file);
   renderPreviewRows(file);
   scheduleAutosave();
@@ -924,6 +1075,37 @@ function bindEditorEvents() {
       const rowId = target.dataset.rowId;
       if (rowId) {
         removeRowFromSelectedFile(rowId);
+      }
+      return;
+    }
+
+    if (target.classList.contains("add-event-button")) {
+      const rowId = target.dataset.rowId;
+      if (!rowId) {
+        return;
+      }
+
+      const rowCard = target.closest(".row-card");
+      if (!rowCard) {
+        return;
+      }
+
+      const typeInput = rowCard.querySelector(".event-type-input");
+      const detailInput = rowCard.querySelector(".event-detail-input");
+      if (!(typeInput instanceof HTMLSelectElement) || !(detailInput instanceof HTMLInputElement)) {
+        return;
+      }
+
+      addEventToRow(rowId, typeInput.value, detailInput.value);
+      detailInput.value = "";
+      return;
+    }
+
+    if (target.classList.contains("event-remove")) {
+      const rowId = target.dataset.rowId;
+      const eventId = target.dataset.eventId;
+      if (rowId && eventId) {
+        removeEventFromRow(rowId, eventId);
       }
     }
   });

@@ -19,6 +19,11 @@ The left side is base text, right side is phonetic text rendered with `ruby/rt`.
 - Edit file name and title
 - Per-row editor: `lyrics + beat + note`
 - Row note line shown under lyrics and aligned with beat grid
+- Event annotation per row (`sing`, `hey`, `clap`, `color`, `uo`, `call`)
+- Inline style markers:
+  - `**bold**`
+  - `__underline__`
+  - `{red}text{/red}` (blue/green/yellow/pink/orange)
 - Live preview with ruby annotations
 - Focus mode: maximize Editor or Preview
 - Cookie-based persistence (no backend)

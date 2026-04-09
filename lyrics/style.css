@@ -99,6 +99,7 @@ body.focus-preview .preview-panel {
 
 button,
 input,
+select,
 textarea {
   font: inherit;
 }
@@ -210,6 +211,7 @@ button.secondary:hover {
 }
 
 input,
+select,
 textarea {
   width: 100%;
   border: 1px solid var(--line);
@@ -281,6 +283,92 @@ textarea {
   font-size: 0.92rem;
 }
 
+.events-editor {
+  margin-top: 0.5rem;
+  border-top: 1px dashed var(--line);
+  padding-top: 0.5rem;
+}
+
+.events-head {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 0.38rem;
+}
+
+.event-create {
+  display: grid;
+  grid-template-columns: 130px 1fr 90px;
+  gap: 0.4rem;
+  margin-bottom: 0.45rem;
+}
+
+.event-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.event-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.16rem 0.45rem;
+  font-size: 0.8rem;
+  background: #fff;
+}
+
+.event-remove {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 0;
+  line-height: 1;
+  font-size: 0.84rem;
+}
+
+.event-remove:hover {
+  color: var(--accent-strong);
+  background: transparent;
+}
+
+.event-sing,
+.preview-event.event-sing {
+  border-color: #9fd5ff;
+  background: #eef8ff;
+}
+
+.event-hey,
+.preview-event.event-hey {
+  border-color: #fcb8ab;
+  background: #fff0ec;
+}
+
+.event-clap,
+.preview-event.event-clap {
+  border-color: #ffd89a;
+  background: #fff8ea;
+}
+
+.event-color,
+.preview-event.event-color {
+  border-color: #ddb4ff;
+  background: #f7eeff;
+}
+
+.event-uo,
+.preview-event.event-uo {
+  border-color: #ffe5a4;
+  background: #fff9e5;
+}
+
+.event-call,
+.preview-event.event-call {
+  border-color: #c5d2de;
+  background: #f1f6fb;
+}
+
 .help {
   margin-top: 0.7rem;
 }
@@ -342,6 +430,48 @@ textarea {
   color: var(--muted);
   font-size: 0.92rem;
   background-color: #fffcf5;
+}
+
+.preview-events {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0.4rem 0.55rem 0.2rem;
+  border-bottom: 1px dashed var(--line);
+  background: #fffcf6;
+}
+
+.preview-event {
+  display: inline-flex;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.13rem 0.42rem;
+  font-size: 0.76rem;
+  color: #4e4a41;
+}
+
+.tint-red {
+  color: #c4382f;
+}
+
+.tint-blue {
+  color: #2b5fb8;
+}
+
+.tint-green {
+  color: #2c8d53;
+}
+
+.tint-yellow {
+  color: #9f7b00;
+}
+
+.tint-pink {
+  color: #ad3f87;
+}
+
+.tint-orange {
+  color: #b35a1b;
 }
 
 ruby rt {
