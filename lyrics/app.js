@@ -28,6 +28,8 @@ const normalEditorButton = document.getElementById("normalEditorButton");
 const focusPreviewButton = document.getElementById("focusPreviewButton");
 const compactPreviewButton = document.getElementById("compactPreviewButton");
 const normalLayoutButton = document.getElementById("normalLayoutButton");
+const colorNamesInput = document.getElementById("colorNamesInput");
+const saveColorNamesButton = document.getElementById("saveColorNamesButton");
 
 const importFileInput = document.getElementById("importFileInput");
 const status = document.getElementById("status");
@@ -79,6 +81,9 @@ function createDefaultWorkspace() {
     },
     selectedFileId: songFileId,
     selectedNodeId: songFileId,
+    settings: {
+      customColors: {},
+    },
   };
 }
 
@@ -263,6 +268,30 @@ function normalizeWorkspaceData() {
   if (typeof workspace.selectedNodeId !== "string") {
     workspace.selectedNodeId = workspace.selectedFileId;
   }
+
+  if (!workspace.settings || typeof workspace.settings !== "object") {
+    workspace.settings = { customColors: {} };
+  }
+  if (!workspace.settings.customColors || typeof workspace.settings.customColors !== "object") {
+    workspace.settings.customColors = {};
+  }
+
+  const cleanedColors = {};
+  for (const [rawName, rawValue] of Object.entries(workspace.settings.customColors)) {
+    if (typeof rawName !== "string" || typeof rawValue !== "string") {
+      continue;
+    }
+    const name = rawName.trim().toLowerCase();
+    const hex = rawValue.trim();
+    if (!/^[a-z][a-z0-9_-]*$/i.test(name)) {
+      continue;
+    }
+    if (!/^#[0-9a-fA-F]{6}$/.test(hex)) {
+      continue;
+    }
+    cleanedColors[name] = hex.toLowerCase();
+  }
+  workspace.settings.customColors = cleanedColors;
 }
 
 function escapeHtml(text) {
@@ -277,50 +306,95 @@ function escapeHtml(text) {
 function renderStyledText(rawText) {
   let output = escapeHtml(rawText);
 
-  output = output.replace(/\{#([0-9a-fA-F]{6})\}([\s\S]*?)\{\/color\}/g, '<span style="color:#$1">$2</span>');
   output = output.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
   output = output.replace(/__(.+?)__/g, "<u>$1</u>");
 
   return output;
 }
 
+function resolveColorToken(token) {
+  const value = token.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(value)) {
+    return value.toLowerCase();
+  }
+  if (!/^[a-z][a-z0-9_-]*$/i.test(value)) {
+    return null;
+  }
+  const color = workspace.settings?.customColors?.[value.toLowerCase()];
+  return typeof color === "string" && /^#[0-9a-fA-F]{6}$/.test(color) ? color.toLowerCase() : null;
+}
+
 function renderLine(line) {
   const pieces = [];
   let i = 0;
+  let activeColor = null;
 
   while (i < line.length) {
-    const open = line.indexOf("[", i);
-    if (open === -1) {
-      pieces.push(renderStyledText(line.slice(i)));
-      break;
+    const openColor = line.slice(i).match(/^\{([a-zA-Z][a-zA-Z0-9_-]*|#[0-9a-fA-F]{6})\}/);
+    if (openColor && !activeColor) {
+      const resolved = resolveColorToken(openColor[1]);
+      if (resolved) {
+        activeColor = resolved;
+        pieces.push(`<span style="color:${activeColor}">`);
+        i += openColor[0].length;
+        continue;
+      }
     }
 
-    pieces.push(renderStyledText(line.slice(i, open)));
-
-    const close = line.indexOf("]", open + 1);
-    if (close === -1) {
-      pieces.push(renderStyledText(line.slice(open)));
-      break;
+    if (line.startsWith("{/color}", i) && activeColor) {
+      pieces.push("</span>");
+      activeColor = null;
+      i += "{/color}".length;
+      continue;
     }
 
-    const inner = line.slice(open + 1, close);
-    const separator = inner.indexOf("|");
-    if (separator === -1) {
-      pieces.push(renderStyledText(line.slice(open, close + 1)));
+    if (line[i] === "[") {
+      const close = line.indexOf("]", i + 1);
+      if (close === -1) {
+        pieces.push(renderStyledText(line.slice(i)));
+        break;
+      }
+
+      const inner = line.slice(i + 1, close);
+      const separator = inner.indexOf("|");
+      if (separator === -1) {
+        pieces.push(renderStyledText(line.slice(i, close + 1)));
+        i = close + 1;
+        continue;
+      }
+
+      const base = inner.slice(0, separator).trim();
+      const phonetic = inner.slice(separator + 1).trim();
+      if (!base || !phonetic) {
+        pieces.push(renderStyledText(line.slice(i, close + 1)));
+        i = close + 1;
+        continue;
+      }
+
+      pieces.push(`<ruby>${renderStyledText(base)}<rt>${renderStyledText(phonetic)}</rt></ruby>`);
       i = close + 1;
       continue;
     }
 
-    const base = inner.slice(0, separator).trim();
-    const phonetic = inner.slice(separator + 1).trim();
-    if (!base || !phonetic) {
-      pieces.push(renderStyledText(line.slice(open, close + 1)));
-      i = close + 1;
+    if (line.startsWith("{#", i) || line.startsWith("{/color}", i)) {
+      pieces.push(renderStyledText(line[i]));
+      i += 1;
       continue;
     }
 
-    pieces.push(`<ruby>${renderStyledText(base)}<rt>${renderStyledText(phonetic)}</rt></ruby>`);
-    i = close + 1;
+    const nextRuby = line.indexOf("[", i);
+    const nextOpenColor = line.indexOf("{#", i);
+    const nextCloseColor = line.indexOf("{/color}", i);
+    const nextSpecial = [nextRuby, nextOpenColor, nextCloseColor]
+      .filter((pos) => pos !== -1)
+      .reduce((min, pos) => Math.min(min, pos), line.length);
+
+    pieces.push(renderStyledText(line.slice(i, nextSpecial)));
+    i = nextSpecial;
+  }
+
+  if (activeColor) {
+    pieces.push("</span>");
   }
 
   return pieces.join("");
@@ -395,6 +469,28 @@ function showStatus(message) {
       status.textContent = "";
     }
   }, 2300);
+}
+
+function colorNamesToEditorText(colorMap) {
+  const entries = Object.entries(colorMap || {}).sort((a, b) => a[0].localeCompare(b[0]));
+  return entries.map(([name, hex]) => `${name} = ${hex}`).join("\n");
+}
+
+function parseColorNamesEditorText(text) {
+  const result = {};
+  const lines = text.split("\n");
+  for (let i = 0; i < lines.length; i += 1) {
+    const raw = lines[i].trim();
+    if (!raw || raw.startsWith("#") || raw.startsWith("//")) {
+      continue;
+    }
+    const match = raw.match(/^([a-zA-Z][a-zA-Z0-9_-]*)\s*=\s*(#[0-9a-fA-F]{6})$/);
+    if (!match) {
+      return { ok: false, error: `Invalid color at line ${i + 1}. Use: name = #RRGGBB` };
+    }
+    result[match[1].toLowerCase()] = match[2].toLowerCase();
+  }
+  return { ok: true, value: result };
 }
 
 function scheduleAutosave() {
@@ -495,7 +591,7 @@ function renderPreviewRows(file) {
 
     const commentLine = document.createElement("div");
     commentLine.className = "preview-line note";
-    commentLine.innerHTML = renderStyledText(row.comment || " ");
+    commentLine.innerHTML = renderLine(row.comment || " ");
 
     wrap.append(lyricLine, commentLine);
     previewLyrics.append(wrap);
@@ -904,6 +1000,7 @@ async function importWorkspaceFromFile(event) {
     normalizeWorkspaceData();
     ensureSelectedFile();
     renderAll();
+    colorNamesInput.value = colorNamesToEditorText(workspace.settings.customColors);
     persistWorkspace();
     showStatus("Workspace imported.");
   } catch {
@@ -975,18 +1072,18 @@ function bindEditorEvents() {
 
     if (key === "l") {
       event.preventDefault();
-      const picked = window.prompt("Hex color (#RRGGBB):", "#dEaD64");
+      const picked = window.prompt("Color token (#RRGGBB or custom name):", "#dEaD64");
       if (!picked) {
         return;
       }
 
-      const hex = picked.trim();
-      if (!/^#[0-9a-fA-F]{6}$/.test(hex)) {
-        showStatus("Color must be #RRGGBB.");
+      const token = picked.trim();
+      if (!/^#[0-9a-fA-F]{6}$/.test(token) && !/^[a-zA-Z][a-zA-Z0-9_-]*$/.test(token)) {
+        showStatus("Use #RRGGBB or a custom color name.");
         return;
       }
 
-      wrapSelection(target, `{${hex}}`, "{/color}");
+      wrapSelection(target, `{${token}}`, "{/color}");
     }
   });
 
@@ -1011,6 +1108,17 @@ function bindActionEvents() {
     setCompactPreview(!document.body.classList.contains("compact-preview"));
   });
   normalLayoutButton.addEventListener("click", () => setLayoutMode("normal"));
+  saveColorNamesButton.addEventListener("click", () => {
+    const parsed = parseColorNamesEditorText(colorNamesInput.value || "");
+    if (!parsed.ok) {
+      showStatus(parsed.error);
+      return;
+    }
+    workspace.settings.customColors = parsed.value;
+    renderPreviewRows(getSelectedFile() || { rows: [] });
+    scheduleAutosave();
+    showStatus("Custom color names saved.");
+  });
 
   window.addEventListener("beforeunload", (event) => {
     if (!hasUnsavedOversizeChanges) {
@@ -1039,6 +1147,8 @@ function init() {
     renderAll();
     showStatus("Workspace data was corrupted and has been reset.");
   }
+
+  colorNamesInput.value = colorNamesToEditorText(workspace.settings.customColors);
 
   bindEditorEvents();
   bindActionEvents();

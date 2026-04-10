@@ -63,10 +63,19 @@
         <ul>
           <li><code>[漢字|かな]</code> renders as ruby text.</li>
           <li><code>**bold**</code>, <code>__underline__</code></li>
-          <li><code>{#dEaD64}text{/color}</code> for 6-digit hex color</li>
+          <li><code>{#dEaD64}text{/color}</code> for hex color, or <code>{sakura}text{/color}</code> for custom names.</li>
           <li>Odd lines are lyrics, even lines are comments.</li>
           <li>Shortcuts: <code>Ctrl+B</code>, <code>Ctrl+U</code>, <code>Ctrl+L</code> (undoable via <code>Ctrl+Z</code>).</li>
         </ul>
+      </details>
+
+      <details class="help">
+        <summary>Settings</summary>
+        <label class="label" for="colorNamesInput">Custom color names (one per line: <code>name = #RRGGBB</code>)</label>
+        <textarea id="colorNamesInput" class="settings-editor" spellcheck="false" placeholder="sakura = #ff7eb6&#10;sky = #66ccff"></textarea>
+        <div class="actions">
+          <button id="saveColorNamesButton" type="button" class="secondary">Save Color Names</button>
+        </div>
       </details>
 
       <p id="status" class="status" aria-live="polite"></p>
