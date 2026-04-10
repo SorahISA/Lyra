@@ -3,6 +3,7 @@ const COOKIE_DATA_PREFIX = "lyra_workspace_data_";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 const COOKIE_CHUNK_SIZE = 3300;
 const COOKIE_MAX_TOTAL = 60000;
+const LOCAL_SETTINGS_KEY = "lyra_settings_v1";
 
 const treeRoot = document.getElementById("treeRoot");
 const fileNameInput = document.getElementById("fileNameInput");
@@ -169,6 +170,30 @@ function clearWorkspaceCookies() {
     }
   }
   deleteCookie(COOKIE_META_KEY);
+}
+
+function saveSettingsToLocal(settings) {
+  try {
+    localStorage.setItem(LOCAL_SETTINGS_KEY, JSON.stringify(settings || { customColors: {} }));
+  } catch {
+    // ignore localStorage failures (private mode/quota/security)
+  }
+}
+
+function loadSettingsFromLocal() {
+  try {
+    const raw = localStorage.getItem(LOCAL_SETTINGS_KEY);
+    if (!raw) {
+      return null;
+    }
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") {
+      return null;
+    }
+    return parsed;
+  } catch {
+    return null;
+  }
 }
 
 function isValidWorkspace(candidate) {
@@ -376,16 +401,17 @@ function renderLine(line) {
       continue;
     }
 
-    if (line.startsWith("{#", i) || line.startsWith("{/color}", i)) {
+    if (line[i] === "{") {
       pieces.push(renderStyledText(line[i]));
       i += 1;
       continue;
     }
 
     const nextRuby = line.indexOf("[", i);
+    const nextCurly = line.indexOf("{", i);
     const nextOpenColor = line.indexOf("{#", i);
     const nextCloseColor = line.indexOf("{/color}", i);
-    const nextSpecial = [nextRuby, nextOpenColor, nextCloseColor]
+    const nextSpecial = [nextRuby, nextCurly, nextOpenColor, nextCloseColor]
       .filter((pos) => pos !== -1)
       .reduce((min, pos) => Math.min(min, pos), line.length);
 
@@ -505,9 +531,11 @@ function scheduleAutosave() {
 function persistWorkspace() {
   try {
     saveWorkspaceToCookies(workspace);
+    saveSettingsToLocal(workspace.settings);
     hasUnsavedOversizeChanges = false;
     showStatus("Saved to cookies.");
   } catch (error) {
+    saveSettingsToLocal(workspace.settings);
     const message = error instanceof Error ? error.message : "Save failed.";
     if (message.includes("Workspace too large")) {
       hasUnsavedOversizeChanges = true;
@@ -1001,6 +1029,7 @@ async function importWorkspaceFromFile(event) {
     ensureSelectedFile();
     renderAll();
     colorNamesInput.value = colorNamesToEditorText(workspace.settings.customColors);
+    saveSettingsToLocal(workspace.settings);
     persistWorkspace();
     showStatus("Workspace imported.");
   } catch {
@@ -1115,6 +1144,7 @@ function bindActionEvents() {
       return;
     }
     workspace.settings.customColors = parsed.value;
+    saveSettingsToLocal(workspace.settings);
     renderPreviewRows(getSelectedFile() || { rows: [] });
     scheduleAutosave();
     showStatus("Custom color names saved.");
@@ -1135,6 +1165,18 @@ function init() {
     workspace = fromCookie || createDefaultWorkspace();
 
     normalizeWorkspaceData();
+    const localSettings = loadSettingsFromLocal();
+    if (localSettings && typeof localSettings === "object") {
+      workspace.settings = {
+        ...workspace.settings,
+        ...localSettings,
+        customColors: {
+          ...(workspace.settings?.customColors || {}),
+          ...(localSettings.customColors || {}),
+        },
+      };
+      normalizeWorkspaceData();
+    }
     ensureSelectedFile();
     expandedFolders.add("root");
     renderAll();
