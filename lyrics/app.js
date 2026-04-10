@@ -17,18 +17,15 @@ const previewLyrics = document.getElementById("previewLyrics");
 const newFolderButton = document.getElementById("newFolderButton");
 const newFileButton = document.getElementById("newFileButton");
 const renameFolderButton = document.getElementById("renameFolderButton");
-const moveUpButton = document.getElementById("moveUpButton");
-const moveDownButton = document.getElementById("moveDownButton");
 const deleteNodeButton = document.getElementById("deleteNodeButton");
 
 const exportButton = document.getElementById("exportButton");
 const importButton = document.getElementById("importButton");
 
-const focusEditorButton = document.getElementById("focusEditorButton");
-const normalEditorButton = document.getElementById("normalEditorButton");
-const focusPreviewButton = document.getElementById("focusPreviewButton");
+const toggleEditorLayoutButton = document.getElementById("toggleEditorLayoutButton");
+const togglePreviewLayoutButton = document.getElementById("togglePreviewLayoutButton");
 const compactPreviewButton = document.getElementById("compactPreviewButton");
-const normalLayoutButton = document.getElementById("normalLayoutButton");
+const exportPdfButton = document.getElementById("exportPdfButton");
 const colorNamesInput = document.getElementById("colorNamesInput");
 const saveColorNamesButton = document.getElementById("saveColorNamesButton");
 
@@ -552,6 +549,30 @@ function setLayoutMode(mode) {
   if (mode === "preview") {
     document.body.classList.add("focus-preview");
   }
+  refreshLayoutToggleLabels();
+}
+
+function refreshLayoutToggleLabels() {
+  const isEditorMax = document.body.classList.contains("focus-editor");
+  const isPreviewMax = document.body.classList.contains("focus-preview");
+  toggleEditorLayoutButton.textContent = isEditorMax ? "Exit Max Editor" : "Max Editor";
+  togglePreviewLayoutButton.textContent = isPreviewMax ? "Exit Max Preview" : "Max Preview";
+}
+
+function toggleEditorLayout() {
+  if (document.body.classList.contains("focus-editor")) {
+    setLayoutMode("normal");
+    return;
+  }
+  setLayoutMode("editor");
+}
+
+function togglePreviewLayout() {
+  if (document.body.classList.contains("focus-preview")) {
+    setLayoutMode("normal");
+    return;
+  }
+  setLayoutMode("preview");
 }
 
 function setCompactPreview(enabled) {
@@ -1012,6 +1033,101 @@ function exportWorkspace() {
   showStatus("Workspace exported.");
 }
 
+function exportCurrentFileAsPdf() {
+  const file = getSelectedFile();
+  if (!file) {
+    showStatus("Select a file first.");
+    return;
+  }
+
+  const printWindow = window.open("", "_blank");
+  if (!printWindow) {
+    showStatus("Popup blocked. Please allow popups for PDF export.");
+    return;
+  }
+
+  const rowsHtml = file.rows
+    .map((row) => {
+      const lyric = renderLine(row.lyrics || " ");
+      const note = renderLine(row.comment || " ");
+      return `
+        <div class="row">
+          <div class="lyric">${lyric}</div>
+          <div class="note">${note}</div>
+        </div>
+      `;
+    })
+    .join("");
+
+  const title = escapeHtml(file.title?.trim() || "Untitled");
+  const fileName = escapeHtml(file.name || "untitled-file");
+
+  printWindow.document.write(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${title}</title>
+  <style>
+    @page { size: A4; margin: 14mm; }
+    body {
+      margin: 0;
+      color: #111;
+      font-family: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", serif;
+      line-height: 1.45;
+      background: #fff;
+    }
+    h1 {
+      margin: 0 0 4px;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+    .meta {
+      color: #555;
+      font-family: "JetBrains Mono", "Consolas", "Menlo", "Monaco", monospace;
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+    .row {
+      margin: 0 0 2px;
+      break-inside: avoid;
+    }
+    .lyric {
+      padding: 0;
+      font-size: 15px;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+    .note {
+      padding: 0 0 1px;
+      color: #555;
+      font-size: 12px;
+      line-height: 1.25;
+      white-space: pre-wrap;
+    }
+    ruby rt {
+      font-size: 0.58em;
+      color: #8a2a1a;
+    }
+  </style>
+</head>
+<body>
+  <h1>${title}</h1>
+  <div class="meta">File: ${fileName}</div>
+  ${rowsHtml}
+</body>
+</html>`);
+
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.onafterprint = () => {
+    printWindow.close();
+  };
+  setTimeout(() => {
+    printWindow.print();
+  }, 120);
+}
+
 async function importWorkspaceFromFile(event) {
   const file = event.target.files?.[0];
   if (!file) {
@@ -1122,21 +1238,18 @@ function bindActionEvents() {
   newFolderButton.addEventListener("click", createFolder);
   newFileButton.addEventListener("click", createFile);
   renameFolderButton.addEventListener("click", renameSelectedFolder);
-  moveUpButton.addEventListener("click", () => moveSelectedFile(-1));
-  moveDownButton.addEventListener("click", () => moveSelectedFile(1));
   deleteNodeButton.addEventListener("click", deleteSelectedNode);
 
   exportButton.addEventListener("click", exportWorkspace);
   importButton.addEventListener("click", () => importFileInput.click());
   importFileInput.addEventListener("change", importWorkspaceFromFile);
 
-  focusEditorButton.addEventListener("click", () => setLayoutMode("editor"));
-  normalEditorButton.addEventListener("click", () => setLayoutMode("normal"));
-  focusPreviewButton.addEventListener("click", () => setLayoutMode("preview"));
+  toggleEditorLayoutButton.addEventListener("click", toggleEditorLayout);
+  togglePreviewLayoutButton.addEventListener("click", togglePreviewLayout);
   compactPreviewButton.addEventListener("click", () => {
     setCompactPreview(!document.body.classList.contains("compact-preview"));
   });
-  normalLayoutButton.addEventListener("click", () => setLayoutMode("normal"));
+  exportPdfButton.addEventListener("click", exportCurrentFileAsPdf);
   saveColorNamesButton.addEventListener("click", () => {
     const parsed = parseColorNamesEditorText(colorNamesInput.value || "");
     if (!parsed.ok) {
@@ -1196,6 +1309,7 @@ function init() {
   bindActionEvents();
   refreshLineNumbers();
   setCompactPreview(false);
+  refreshLayoutToggleLabels();
 }
 
 init();
