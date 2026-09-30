@@ -35,9 +35,9 @@ const format = (value, digits = 2) =>
 const safeNumber = (value) => Math.max(0, Number.parseFloat(value) || 0);
 const percent = (value) => safeNumber(value) / 100;
 
-function rankButtons(option) {
+function rankButtons(option, mode) {
   return ["SS", "S", "A", "B", "C", "D"].map((rank) => {
-    const disabled = rank === "SS" || rank === "S";
+    const disabled = rank === "SS" || rank === "S" || (mode === "event" && rank === "D");
     const active = option.rank === rank;
     return `<button type="button" class="rank${active ? " active" : ""}" data-rank="${rank}" ${disabled ? "disabled" : `aria-pressed="${active}"`}>
       ${disabled ? `<span>${rank}</span><small>未開放</small>` : rank}
@@ -67,7 +67,7 @@ function optionMarkup(option, mode, index) {
         </div>
       </div>
       <div class="rank-options" aria-label="${label}選項 ${index + 1} 評級">
-        ${rankButtons(option)}
+        ${rankButtons(option, mode)}
       </div>
     </div>
     <div class="option-bonuses">
