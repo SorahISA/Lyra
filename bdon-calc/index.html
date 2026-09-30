@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#08111f" />
+    <meta
+      name="description"
+      content="依一般與活動等級、加成和目標，自動計算所需火量。"
+    />
+    <title>BDON 火量計算器</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2308111f'/%3E%3Cpath d='M35 8c3 12-6 14-2 23 2-6 8-8 9-15 9 10 13 19 8 29-4 8-12 12-20 11-12-1-20-9-19-20 1-9 8-15 14-22 0 8 3 10 6 13-2-8 3-13 4-19Z' fill='%23ff7a45'/%3E%3Cpath d='M32 31c1 6-4 8-3 13 1 3 6 4 8 0 2-4-1-8-3-11 6 4 9 9 7 15-2 5-7 8-12 7-7-1-11-6-9-12 2-5 7-8 8-13 1 3 2 4 4 5Z' fill='%235de4ff'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="style.css" />
+    <script src="calculator.js" defer></script>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">BDON RESOURCE TOOL</p>
+          <h1>火量計算器</h1>
+        </div>
+        <div class="status-chip" aria-label="計算狀態">
+          <span class="status-dot" aria-hidden="true"></span>
+          即時計算
+        </div>
+      </header>
+
+      <div class="workspace">
+        <section class="control-panel" aria-label="計算條件">
+          <div class="panel-heading">
+            <span class="step-number">01</span>
+            <div>
+              <h2>建立評級選項</h2>
+              <p>分別新增一般與活動選項，系統會比對所有交叉組合。</p>
+            </div>
+          </div>
+
+          <div class="option-section normal-options-section">
+            <div class="section-toolbar">
+              <h3>一般評級與加成</h3>
+              <button type="button" class="add-plan" id="addNormal">＋ 新增一般</button>
+            </div>
+            <div class="option-list" id="normalOptions"></div>
+          </div>
+
+          <div class="option-section event-options-section">
+            <div class="section-toolbar">
+              <h3>活動評級與加成</h3>
+              <button type="button" class="add-plan" id="addEvent">＋ 新增活動</button>
+            </div>
+            <div class="option-list" id="eventOptions"></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="panel-heading compact">
+            <span class="step-number">02</span>
+            <div>
+              <h2>輸入目標</h2>
+              <p>結果會分別找出 pt 與道具最省火的方案。</p>
+            </div>
+          </div>
+
+          <div class="input-section targets">
+            <h3>目標</h3>
+            <div class="input-grid">
+              <label>
+                <span>目標 pt</span>
+                <span class="number-input"><input id="targetPt" type="number" min="0" step="1" value="1000" inputmode="decimal" /><b>pt</b></span>
+              </label>
+              <label>
+                <span>目標道具</span>
+                <span class="number-input"><input id="targetItem" type="number" min="0" step="1" value="1000" inputmode="decimal" /><b>個</b></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="comparison-section">
+            <div class="section-toolbar">
+              <h3>所有組合比較</h3>
+              <span id="combinationCount">1 種組合</span>
+            </div>
+            <div class="comparison-list" id="comparisonList"></div>
+          </div>
+        </section>
+
+        <aside class="result-panel" aria-live="polite">
+          <div class="panel-heading light">
+            <span class="step-number">03</span>
+            <div>
+              <h2>計算結果</h2>
+              <p>依目前條件即時更新</p>
+            </div>
+          </div>
+
+          <div class="result-card accent-pt">
+            <div class="result-label"><span>PT GOAL</span><b id="ptWinner">一般 1 × 活動 1</b></div>
+            <div class="result-value"><strong id="ptResult">0.00</strong><span>火</span></div>
+            <p id="ptRounded">至少需要 0 火</p>
+            <div class="rate-row"><span>每火可得</span><b id="ptPerFire">0 pt</b></div>
+          </div>
+
+          <div class="result-card accent-item">
+            <div class="result-label"><span>ITEM GOAL</span><b id="itemWinner">一般 1 × 活動 1</b></div>
+            <div class="result-value"><strong id="itemResult">0.00</strong><span>火</span></div>
+            <p id="itemRounded">至少需要 0 火</p>
+            <div class="rate-row"><span>每火可得</span><b id="itemPerFire">0 道具</b></div>
+          </div>
+
+          <details class="formula-card">
+            <summary>查看計算方式</summary>
+            <div class="formula-content">
+              <p><b>pt</b> = 目標 pt ÷［5 ×（一般 pt ×（1＋一般 pt 加成）＋一般 cp × 活動 pt ×（1＋活動 pt 加成））］</p>
+              <p><b>道具</b> = 目標道具 ÷［5 ×（一般道具 ×（1＋一般道具加成）＋一般 cp × 活動道具 ×（1＋活動道具加成））］</p>
+            </div>
+          </details>
+        </aside>
+      </div>
+    </main>
+  </body>
+</html>
