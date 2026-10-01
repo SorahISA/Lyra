@@ -81,10 +81,14 @@ h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.65rem); line-height: 1; letter-spa
 .option-name:focus { outline: 1px solid var(--cyan); background: #081423; }
 .option-index { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 7px; background: #173149; color: var(--cyan); font-size: .68rem; }
 .event-options-section .option-index { background: #43281f; color: var(--orange-soft); }
-.rate-summary { display: grid; grid-template-columns: max-content max-content; gap: 2px 6px; color: var(--muted); font-size: .67rem; line-height: 1.25; font-variant-numeric: tabular-nums; }
+.rate-summary { display: grid; gap: 2px 0; color: var(--muted); font-size: .67rem; line-height: 1.25; font-variant-numeric: tabular-nums; }
+.rate-summary.whole-only { grid-template-columns: 3ch max-content; }
+.rate-summary.decimal-aligned { grid-template-columns: 3ch 3ch max-content; }
 .rate-summary > span { display: contents; }
 .rate-summary b { color: #c9d7e8; font-weight: 700; text-align: right; }
-.rate-summary i { font-style: normal; text-align: left; }
+.rate-summary em { color: #c9d7e8; font-style: normal; font-weight: 700; text-align: left; }
+.rate-summary em.phantom { visibility: hidden; }
+.rate-summary i { padding-left: 6px; font-style: normal; text-align: left; }
 .winner-mark { padding: 3px 6px; border-radius: 5px; background: rgb(255 122 69 / 14%); color: var(--orange-soft); font-size: .58rem; }
 .winner-mark.item { background: rgb(93 228 255 / 14%); color: var(--cyan); }
 .option-actions { display: flex; align-items: center; gap: 6px; }
@@ -161,9 +165,27 @@ label > span:first-child { display: block; margin: 0 0 7px; color: var(--muted);
 .formula-content { padding: 8px 2px 0; font-size: .75rem; line-height: 1.65; }
 .formula-content b { color: var(--text); }
 
+.rate-reference { margin-top: 28px; padding: 28px 32px 32px; border: 1px solid var(--line); border-radius: 22px; background: rgb(12 24 40 / 86%); box-shadow: var(--shadow); }
+.reference-heading { margin-bottom: 20px; }
+.reference-heading h2 { margin: 0; font-size: 1.15rem; }
+.reference-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.reference-card { overflow: hidden; border: 1px solid var(--line); border-radius: 15px; background: #091523; }
+.reference-card-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 16px 18px; border-bottom: 1px solid var(--line); }
+.reference-card-heading h3 { margin: 0; font-size: .95rem; }
+.reference-card-heading p { margin: 0; color: var(--muted); font-size: .74rem; }
+.table-wrap { overflow-x: auto; }
+.reference-card table { width: 100%; border-collapse: collapse; font-size: .82rem; font-variant-numeric: tabular-nums; }
+.reference-card th, .reference-card td { padding: 10px 18px; border-bottom: 1px solid rgb(37 54 76 / 65%); text-align: right; }
+.reference-card th:first-child { text-align: left; }
+.reference-card thead th { color: var(--muted); font-size: .7rem; font-weight: 700; text-transform: uppercase; }
+.reference-card tbody th { color: var(--text); }
+.reference-card tbody td { color: #c9d7e8; }
+.reference-card tbody tr:last-child th, .reference-card tbody tr:last-child td { border-bottom: 0; }
+
 @media (max-width: 880px) {
   .workspace { grid-template-columns: 1fr; }
   .result-panel { border-top: 1px solid var(--line); border-left: 0; }
+  .reference-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 620px) {
@@ -171,6 +193,7 @@ label > span:first-child { display: block; margin: 0 0 7px; color: var(--muted);
   .topbar { align-items: start; }
   .status-chip { padding: 8px 10px; font-size: .75rem; }
   .control-panel, .result-panel { padding: 22px 18px; }
+  .rate-reference { padding: 22px 18px; }
   .mode-grid, .input-grid { grid-template-columns: 1fr; }
   .option-card { grid-template-columns: 1fr; }
   .plan-mode { grid-template-columns: 1fr; }

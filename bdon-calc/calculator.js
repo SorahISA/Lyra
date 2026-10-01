@@ -17,12 +17,52 @@ const rates = {
   },
 };
 
-const state = {
-  nextNormalId: 2,
-  nextEventId: 2,
-  normalOptions: [{ id: 1, name: "一般隊伍 1", rank: "A", pt: 0, item: 0 }],
-  eventOptions: [{ id: 1, name: "活動隊伍 1", rank: "A", pt: 0, item: 0 }],
+const availableRanks = {
+  normal: ["SS", "S", "A", "B", "C", "D"],
+  event: ["SS", "S", "A", "B", "C"],
 };
+
+const STORAGE_KEY = "bdon-calc-teams-v1";
+const defaultOptions = {
+  normal: [{ id: 1, name: "一般隊伍 1", rank: "A", pt: 0, item: 0 }],
+  event: [{ id: 1, name: "活動隊伍 1", rank: "A", pt: 0, item: 0 }],
+};
+
+function sanitizeOptions(options, mode) {
+  if (!Array.isArray(options)) return defaultOptions[mode];
+  return options.map((option, index) => ({
+    id: index + 1,
+    name: typeof option?.name === "string" && option.name.trim()
+      ? option.name.trim()
+      : `${mode === "normal" ? "一般隊伍" : "活動隊伍"} ${index + 1}`,
+    rank: availableRanks[mode].includes(option?.rank) ? option.rank : (mode === "event" ? "C" : "A"),
+    pt: Math.max(0, Number.parseFloat(option?.pt) || 0),
+    item: Math.max(0, Number.parseFloat(option?.item) || 0),
+  }));
+}
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    const normal = sanitizeOptions(saved?.normalOptions, "normal");
+    const event = sanitizeOptions(saved?.eventOptions, "event");
+    return {
+      nextNormalId: normal.length + 1,
+      nextEventId: event.length + 1,
+      normalOptions: normal,
+      eventOptions: event,
+    };
+  } catch {
+    return {
+      nextNormalId: 2,
+      nextEventId: 2,
+      normalOptions: defaultOptions.normal,
+      eventOptions: defaultOptions.event,
+    };
+  }
+}
+
+const state = loadState();
 
 const normalOptions = document.querySelector("#normalOptions");
 const eventOptions = document.querySelector("#eventOptions");
@@ -46,10 +86,30 @@ const escapeHtml = (value) => String(value)
   .replaceAll("'", "&#039;");
 let draggedOption = null;
 
-function rankButtons(option) {
+function persistState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      normalOptions: state.normalOptions,
+      eventOptions: state.eventOptions,
+    }));
+  } catch {
+    // The calculator still works if local browser storage is unavailable.
+  }
+}
+
+function rateNumberMarkup(value, alignDecimals) {
+  const [whole, fraction] = String(value).split(".");
+  if (!alignDecimals) return `<b>${whole}</b>`;
+  return `<b>${whole}</b><em class="${fraction ? "" : "phantom"}">.${fraction || "00"}</em>`;
+}
+
+function rankButtons(option, mode) {
   return ["SS", "S", "A", "B", "C", "D"].map((rank) => {
+    const disabled = !availableRanks[mode].includes(rank);
     const active = option.rank === rank;
-    return `<button type="button" class="rank${active ? " active" : ""}" data-rank="${rank}" aria-pressed="${active}">${rank}</button>`;
+    return `<button type="button" class="rank${active ? " active" : ""}" data-rank="${rank}" ${disabled ? "disabled" : `aria-pressed="${active}"`}>
+      ${disabled ? `<span>${rank}</span><small>未開放</small>` : rank}
+    </button>`;
   }).join("");
 }
 
@@ -61,7 +121,7 @@ function optionMarkup(option, mode, index) {
     ? [[rate.pt, "pt"], [rate.item, "道具"], [rate.cp, "cp"]]
     : [[rate.pt, "pt"], [rate.item, "道具"]];
   const summaryMarkup = summary.map(([value, unit]) =>
-    `<span><b>${value}</b><i>${unit}</i></span>`
+    `<span>${rateNumberMarkup(value, !isNormal)}<i>${unit}</i></span>`
   ).join("");
   return `<article class="option-card" data-option-type="${mode}" data-option-id="${option.id}">
     <div class="option-main">
@@ -72,14 +132,14 @@ function optionMarkup(option, mode, index) {
           <span class="winner-marks"></span>
         </div>
         <div class="option-actions">
-          <span class="rate-summary" aria-label="${summary.map(([value, unit]) => `${value} ${unit}`).join("、")}">${summaryMarkup}</span>
+          <span class="rate-summary ${isNormal ? "whole-only" : "decimal-aligned"}" aria-label="${summary.map(([value, unit]) => `${value} ${unit}`).join("、")}">${summaryMarkup}</span>
           <button type="button" class="copy-option" data-copy-option="${option.id}">複製</button>
           <button type="button" class="remove-plan" data-remove-option="${option.id}">移除</button>
           <span class="drag-handle" draggable="true" data-drag-option="${option.id}" role="button" aria-label="拖曳${label}隊伍 ${index + 1}" title="拖曳至另一區">⠿</span>
         </div>
       </div>
       <div class="rank-options" aria-label="${label}選項 ${index + 1} 評級">
-        ${rankButtons(option)}
+        ${rankButtons(option, mode)}
       </div>
     </div>
     <div class="option-bonuses">
@@ -98,6 +158,7 @@ function optionMarkup(option, mode, index) {
 function renderOptions(focusMode = null) {
   normalOptions.innerHTML = state.normalOptions.map((option, index) => optionMarkup(option, "normal", index)).join("");
   eventOptions.innerHTML = state.eventOptions.map((option, index) => optionMarkup(option, "event", index)).join("");
+  persistState();
   if (focusMode) document.querySelector(`#${focusMode}Options`)?.lastElementChild?.querySelector(".rank:not(:disabled)")?.focus();
 }
 
@@ -208,6 +269,7 @@ function handleOptionInput(event) {
     const list = state[`${card.dataset.optionType}Options`];
     const option = list.find((item) => item.id === Number(card.dataset.optionId));
     option.name = name.textContent.trim();
+    persistState();
     calculate();
     return;
   }
@@ -217,6 +279,7 @@ function handleOptionInput(event) {
   const list = state[`${card.dataset.optionType}Options`];
   const option = list.find((item) => item.id === Number(card.dataset.optionId));
   option[input.dataset.optionField] = safeNumber(input.value);
+  persistState();
   calculate();
 }
 
@@ -295,7 +358,11 @@ function handleDrop(event) {
   } else {
     const [option] = sourceList.splice(sourceIndex, 1);
     const counterName = `next${targetMode[0].toUpperCase()}${targetMode.slice(1)}Id`;
-    targetList.push({ ...option, id: state[counterName]++ });
+    targetList.push({
+      ...option,
+      id: state[counterName]++,
+      rank: availableRanks[targetMode].includes(option.rank) ? option.rank : "C",
+    });
   }
 
   draggedOption = null;
@@ -324,6 +391,7 @@ document.querySelector("#addEvent").addEventListener("click", () => addOption("e
     const fallback = `${mode === "normal" ? "一般隊伍" : "活動隊伍"} ${index + 1}`;
     listState[index].name = fallback;
     name.textContent = fallback;
+    persistState();
     calculate();
   });
   list.addEventListener("dragstart", handleDragStart);
