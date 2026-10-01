@@ -14,8 +14,8 @@
       type="image/svg+xml"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2308111f'/%3E%3Cpath d='M35 8c3 12-6 14-2 23 2-6 8-8 9-15 9 10 13 19 8 29-4 8-12 12-20 11-12-1-20-9-19-20 1-9 8-15 14-22 0 8 3 10 6 13-2-8 3-13 4-19Z' fill='%23ff7a45'/%3E%3Cpath d='M32 31c1 6-4 8-3 13 1 3 6 4 8 0 2-4-1-8-3-11 6 4 9 9 7 15-2 5-7 8-12 7-7-1-11-6-9-12 2-5 7-8 8-13 1 3 2 4 4 5Z' fill='%235de4ff'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="style.css?v=20261002-2" />
-    <script src="calculator.js?v=20261002-2" defer></script>
+    <link rel="stylesheet" href="style.css?v=20261002-4" />
+    <script src="calculator.js?v=20261002-4" defer></script>
   </head>
   <body>
     <main class="app-shell">
@@ -68,6 +68,12 @@
 
           <div class="input-section targets">
             <h3>目標</h3>
+            <label class="reward-picker">
+              <span>從活動點數獎勵選擇目標</span>
+              <select id="targetPtReward">
+                <option value="">手動輸入目標 pt</option>
+              </select>
+            </label>
             <div class="input-grid">
               <label>
                 <span>目標 pt</span>
@@ -78,6 +84,36 @@
                 <span class="number-input"><input id="targetItem" type="number" min="0" step="1" value="1000" inputmode="decimal" /><b>個</b></span>
               </label>
             </div>
+            <div class="shop-picker">
+              <label>
+                <span>從活動商城選擇目標</span>
+                <select id="shopItemSelect">
+                  <option value="">手動輸入目標道具</option>
+                </select>
+              </label>
+              <div class="shop-selection" id="shopSelection" hidden>
+                <div class="shop-item-preview" id="shopItemPreview"></div>
+                <label class="shop-count-field">
+                  <span>兌換次數</span>
+                  <span class="number-input"><input id="shopExchangeCount" type="number" min="1" step="1" value="1" inputmode="numeric" /><b>次</b></span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="input-section owned">
+            <h3>目前持有</h3>
+            <div class="input-grid">
+              <label>
+                <span>已有 pt</span>
+                <span class="number-input"><input id="ownedPt" type="number" min="0" step="1" value="0" inputmode="decimal" /><b>pt</b></span>
+              </label>
+              <label>
+                <span>已有道具</span>
+                <span class="number-input"><input id="ownedItem" type="number" min="0" step="1" value="0" inputmode="decimal" /><b>個</b></span>
+              </label>
+            </div>
+            <p class="input-note">消火會以「目標－目前持有」計算，持有量已達目標時為 0 火。</p>
           </div>
 
           <div class="comparison-section">
@@ -115,8 +151,8 @@
           <details class="formula-card">
             <summary>查看計算方式</summary>
             <div class="formula-content">
-              <p><b>pt</b> = 目標 pt ÷［5 ×（一般 pt ×（1＋一般 pt 加成）＋一般 cp × 活動 pt ×（1＋活動 pt 加成））］</p>
-              <p><b>道具</b> = 目標道具 ÷［5 ×（一般道具 ×（1＋一般道具加成）＋一般 cp × 活動道具 ×（1＋活動道具加成））］</p>
+              <p><b>pt</b> = max（目標 pt－已有 pt，0）÷［5 ×（一般 pt ×（1＋一般 pt 加成）＋一般 cp × 活動 pt ×（1＋活動 pt 加成））］</p>
+              <p><b>道具</b> = max（目標道具－已有道具，0）÷［5 ×（一般道具 ×（1＋一般道具加成）＋一般 cp × 活動道具 ×（1＋活動道具加成））］</p>
             </div>
           </details>
         </aside>

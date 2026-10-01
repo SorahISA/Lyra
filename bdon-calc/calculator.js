@@ -22,6 +22,43 @@ const availableRanks = {
   event: ["SS", "S", "A", "B", "C"],
 };
 
+const pointRewardTargets = [
+  500, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000,
+  10000, 12000, 14000, 15000, 16000, 18000, 20000, 22000, 24000, 27000,
+  30000, 35000, 40000, 45000, 50000, 55000, 60000, 65000, 70000, 75000,
+  80000, 85000, 90000, 95000, 100000, 105000, 110000, 115000, 120000, 125000,
+  130000, 135000, 140000, 145000, 150000, 155000, 160000, 165000, 170000, 175000,
+  180000, 185000, 190000, 200000, 210000, 220000, 230000, 240000, 250000, 260000,
+  270000, 280000, 300000, 330000, 375000, 450000, 525000, 600000, 675000, 750000,
+  825000, 900000, 1000000, 1250000, 1500000, 2000000, 2500000, 3000000,
+];
+
+const itemAssetRoot = "https://assets.bdon.moe/en/en/Item";
+const shopItems = [
+  { id: "rest", name: "圓滾滾的休息時刻", quantity: 1, price: 100000, limit: 5 },
+  { id: "gacha", name: "交織的樂章轉蛋券", quantity: 1, price: 100000, limit: 3, icon: `${itemAssetRoot}/ticket/item_icon_ticket_gacha_001/item_icon_ticket_gacha_001.webp` },
+  { id: "coin-limited", name: "硬幣", quantity: 60000, price: 3500, limit: 20, icon: `${itemAssetRoot}/common/item_icon_coin/item_icon_coin.webp` },
+  { id: "member-exp-limited", name: "團員 EXP", quantity: 30000, price: 1750, limit: 10, icon: `${itemAssetRoot}/exp/item_icon_exp_004/item_icon_exp_004.webp` },
+  { id: "snapshot-exp-limited", name: "快照 EXP", quantity: 30000, price: 1750, limit: 10, icon: `${itemAssetRoot}/exp/item_icon_exp_005/item_icon_exp_005.webp` },
+  { id: "miracle", name: "奇蹟水晶", quantity: 5, price: 26250, limit: 5, icon: `${itemAssetRoot}/crystal/item_icon_crystal_002/item_icon_crystal_002.webp` },
+  { id: "fortune", name: "幸運水晶", quantity: 5, price: 8750, limit: 2, icon: `${itemAssetRoot}/crystal/item_icon_crystal_001/item_icon_crystal_001.webp` },
+  { id: "azure-l-limited", name: "紺碧碎片（大）", quantity: 120, price: 7000, limit: 50, icon: `${itemAssetRoot}/fragment/item_icon_fragment_006/item_icon_fragment_006.webp` },
+  { id: "azure-m-limited", name: "紺碧碎片（中）", quantity: 240, price: 7000, limit: 50, icon: `${itemAssetRoot}/fragment/item_icon_fragment_005/item_icon_fragment_005.webp` },
+  { id: "azure-s-limited", name: "紺碧碎片（小）", quantity: 400, price: 7000, limit: 50, icon: `${itemAssetRoot}/fragment/item_icon_fragment_004/item_icon_fragment_004.webp` },
+  { id: "sp-skill", name: "SP 技能強化券", quantity: 5, price: 26250, limit: 20, icon: `${itemAssetRoot}/ticket/item_icon_ticket_skill_004/item_icon_ticket_skill_004.webp` },
+  { id: "skill", name: "技能強化券", quantity: 5, price: 8750, limit: 18, icon: `${itemAssetRoot}/ticket/item_icon_ticket_skill_003/item_icon_ticket_skill_003.webp` },
+  { id: "live-skill", name: "演出技能強化券", quantity: 5, price: 3500, limit: 40, icon: `${itemAssetRoot}/ticket/item_icon_ticket_skill_001/item_icon_ticket_skill_001.webp` },
+  { id: "gekiso-skill", name: "激奏技能強化券", quantity: 5, price: 3500, limit: 40, icon: `${itemAssetRoot}/ticket/item_icon_ticket_skill_002/item_icon_ticket_skill_002.webp` },
+  { id: "hope-prism", name: "希望稜晶", quantity: 5, price: 26250, limit: 15, icon: `${itemAssetRoot}/prism/item_icon_prism_006/item_icon_prism_006.webp` },
+  { id: "mewtype-prism", name: "夢限大 MewType 稜晶", quantity: 5, price: 8750, limit: 50, icon: `${itemAssetRoot}/prism/item_icon_prism_003/item_icon_prism_003.webp` },
+  { id: "coin-open", name: "硬幣", quantity: 1, price: 1, limit: null, icon: `${itemAssetRoot}/common/item_icon_coin/item_icon_coin.webp` },
+  { id: "member-exp-open", name: "團員 EXP", quantity: 1, price: 1, limit: null, icon: `${itemAssetRoot}/exp/item_icon_exp_004/item_icon_exp_004.webp` },
+  { id: "snapshot-exp-open", name: "快照 EXP", quantity: 1, price: 1, limit: null, icon: `${itemAssetRoot}/exp/item_icon_exp_005/item_icon_exp_005.webp` },
+  { id: "azure-l-open", name: "紺碧碎片（大）", quantity: 3, price: 1800, limit: null, icon: `${itemAssetRoot}/fragment/item_icon_fragment_006/item_icon_fragment_006.webp` },
+  { id: "azure-m-open", name: "紺碧碎片（中）", quantity: 6, price: 1800, limit: null, icon: `${itemAssetRoot}/fragment/item_icon_fragment_005/item_icon_fragment_005.webp` },
+  { id: "azure-s-open", name: "紺碧碎片（小）", quantity: 10, price: 1800, limit: null, icon: `${itemAssetRoot}/fragment/item_icon_fragment_004/item_icon_fragment_004.webp` },
+];
+
 const STORAGE_KEY = "bdon-calc-teams-v1";
 const defaultOptions = {
   normal: [{ id: 1, name: "一般隊伍 1", rank: "A", pt: 0, item: 0 }],
@@ -51,6 +88,12 @@ function loadState() {
       nextEventId: event.length + 1,
       normalOptions: normal,
       eventOptions: event,
+      targetPt: Number.isFinite(Number.parseFloat(saved?.targetPt)) ? Math.max(0, Number.parseFloat(saved.targetPt)) : 1000,
+      targetItem: Number.isFinite(Number.parseFloat(saved?.targetItem)) ? Math.max(0, Number.parseFloat(saved.targetItem)) : 1000,
+      ownedPt: Math.max(0, Number.parseFloat(saved?.ownedPt) || 0),
+      ownedItem: Math.max(0, Number.parseFloat(saved?.ownedItem) || 0),
+      shopItemId: shopItems.some((item) => item.id === saved?.shopItemId) ? saved.shopItemId : "",
+      shopExchangeCount: Math.max(1, Math.floor(Number.parseFloat(saved?.shopExchangeCount) || 1)),
     };
   } catch {
     return {
@@ -58,6 +101,12 @@ function loadState() {
       nextEventId: 2,
       normalOptions: defaultOptions.normal,
       eventOptions: defaultOptions.event,
+      targetPt: 1000,
+      targetItem: 1000,
+      ownedPt: 0,
+      ownedItem: 0,
+      shopItemId: "",
+      shopExchangeCount: 1,
     };
   }
 }
@@ -69,6 +118,13 @@ const eventOptions = document.querySelector("#eventOptions");
 const comparisonList = document.querySelector("#comparisonList");
 const targetPt = document.querySelector("#targetPt");
 const targetItem = document.querySelector("#targetItem");
+const ownedPt = document.querySelector("#ownedPt");
+const ownedItem = document.querySelector("#ownedItem");
+const targetPtReward = document.querySelector("#targetPtReward");
+const shopItemSelect = document.querySelector("#shopItemSelect");
+const shopSelection = document.querySelector("#shopSelection");
+const shopItemPreview = document.querySelector("#shopItemPreview");
+const shopExchangeCount = document.querySelector("#shopExchangeCount");
 
 const format = (value, digits = 2) =>
   new Intl.NumberFormat("zh-TW", {
@@ -91,6 +147,12 @@ function persistState() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       normalOptions: state.normalOptions,
       eventOptions: state.eventOptions,
+      targetPt: safeNumber(targetPt.value),
+      targetItem: safeNumber(targetItem.value),
+      ownedPt: safeNumber(ownedPt.value),
+      ownedItem: safeNumber(ownedItem.value),
+      shopItemId: shopItemSelect.value,
+      shopExchangeCount: Math.max(1, Math.floor(safeNumber(shopExchangeCount.value) || 1)),
     }));
   } catch {
     // The calculator still works if local browser storage is unavailable.
@@ -181,17 +243,44 @@ function evaluateCombination(normalOption, eventOption, normalIndex, eventIndex)
     eventIndex,
     ptPerFire,
     itemPerFire,
-    ptFire: safeNumber(targetPt.value) / ptPerFire,
-    itemFire: safeNumber(targetItem.value) / itemPerFire,
+    ptFire: Math.max(safeNumber(targetPt.value) - safeNumber(ownedPt.value), 0) / ptPerFire,
+    itemFire: Math.max(safeNumber(targetItem.value) - safeNumber(ownedItem.value), 0) / itemPerFire,
   };
+}
+
+function applyShopTarget() {
+  const item = shopItems.find((candidate) => candidate.id === shopItemSelect.value);
+  shopSelection.hidden = !item;
+  if (!item) {
+    shopItemPreview.innerHTML = "";
+    return;
+  }
+
+  const requestedCount = Math.max(1, Math.floor(safeNumber(shopExchangeCount.value) || 1));
+  const count = item.limit === null ? requestedCount : Math.min(requestedCount, item.limit);
+  shopExchangeCount.value = count;
+  shopExchangeCount.max = item.limit ?? "";
+  targetItem.value = item.price * count;
+  const totalReward = item.quantity * count;
+  shopItemPreview.innerHTML = `${item.icon
+    ? `<img src="${item.icon}" alt="" loading="lazy" />`
+    : '<span class="shop-item-fallback" aria-hidden="true">休</span>'}
+    <span><b>${escapeHtml(item.name)}</b><small>每次 ${format(item.quantity, 0)} 個 · ${format(item.price, 0)} 道具${item.limit === null ? " · 無兌換限制" : ` · 最多 ${item.limit} 次`}</small><em>共 ${format(totalReward, 0)} 個，需 ${format(item.price * count, 0)} 道具</em></span>`;
+  persistState();
+  calculate();
 }
 
 function renderBest(kind, result, unit) {
   const fire = result[`${kind}Fire`];
   const perFire = result[`${kind}PerFire`];
+  const remaining = kind === "pt"
+    ? Math.max(safeNumber(targetPt.value) - safeNumber(ownedPt.value), 0)
+    : Math.max(safeNumber(targetItem.value) - safeNumber(ownedItem.value), 0);
   document.querySelector(`#${kind}Winner`).textContent = `${result.normalOption.name} × ${result.eventOption.name}`;
   document.querySelector(`#${kind}Result`).textContent = format(fire);
-  document.querySelector(`#${kind}Rounded`).textContent = `至少需要 ${Math.ceil(fire)} 火`;
+  document.querySelector(`#${kind}Rounded`).textContent = remaining === 0
+    ? "已達目標，不需消耗火"
+    : `尚缺 ${format(remaining, 0)} ${unit} · 至少需要 ${Math.ceil(fire)} 火`;
   document.querySelector(`#${kind}PerFire`).textContent = `${format(perFire)} ${unit}`;
 }
 
@@ -248,8 +337,8 @@ function calculate() {
       ${result === bestItem ? '<span class="best-badge item">道具最佳</span>' : ""}
       <span class="comparison-ranks">${result.normalOption.rank} 級 × ${result.eventOption.rank} 級</span>
     </div>
-    <div class="comparison-value"><span>目標 pt</span><b>${format(result.ptFire)} 火</b></div>
-    <div class="comparison-value"><span>目標道具</span><b>${format(result.itemFire)} 火</b></div>
+    <div class="comparison-value"><span>尚缺 pt</span><b>${format(result.ptFire)} 火</b></div>
+    <div class="comparison-value"><span>尚缺道具</span><b>${format(result.itemFire)} 火</b></div>
   </div>`).join("");
 }
 
@@ -406,7 +495,46 @@ document.querySelector("#addEvent").addEventListener("click", () => addOption("e
   });
   list.addEventListener("drop", handleDrop);
 });
-[targetPt, targetItem].forEach((field) => field.addEventListener("input", calculate));
+targetPtReward.insertAdjacentHTML("beforeend", pointRewardTargets.map((value) =>
+  `<option value="${value}">${new Intl.NumberFormat("zh-TW").format(value)} pt 獎勵</option>`
+).join(""));
+shopItemSelect.insertAdjacentHTML("beforeend", shopItems.map((item) =>
+  `<option value="${item.id}">${escapeHtml(item.name)}｜${format(item.quantity, 0)} 個／${format(item.price, 0)} 道具${item.limit === null ? "｜無限制" : `｜最多 ${item.limit} 次`}</option>`
+).join(""));
+
+targetPt.value = state.targetPt;
+targetItem.value = state.targetItem;
+ownedPt.value = state.ownedPt;
+ownedItem.value = state.ownedItem;
+targetPtReward.value = pointRewardTargets.includes(state.targetPt) ? String(state.targetPt) : "";
+shopItemSelect.value = state.shopItemId;
+shopExchangeCount.value = state.shopExchangeCount;
+
+[targetPt, targetItem, ownedPt, ownedItem].forEach((field) => field.addEventListener("input", () => {
+  if (field === targetPt) {
+    targetPtReward.value = pointRewardTargets.includes(safeNumber(targetPt.value)) ? targetPt.value : "";
+  }
+  if (field === targetItem) {
+    shopItemSelect.value = "";
+    shopSelection.hidden = true;
+    shopItemPreview.innerHTML = "";
+  }
+  persistState();
+  calculate();
+}));
+targetPtReward.addEventListener("change", () => {
+  if (!targetPtReward.value) return;
+  targetPt.value = targetPtReward.value;
+  persistState();
+  calculate();
+});
+shopItemSelect.addEventListener("change", () => {
+  shopExchangeCount.value = 1;
+  applyShopTarget();
+});
+shopExchangeCount.addEventListener("input", applyShopTarget);
+
+if (shopItemSelect.value) applyShopTarget();
 
 renderOptions();
 calculate();
