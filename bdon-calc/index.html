@@ -14,9 +14,66 @@
       type="image/svg+xml"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2308111f'/%3E%3Cpath d='M35 8c3 12-6 14-2 23 2-6 8-8 9-15 9 10 13 19 8 29-4 8-12 12-20 11-12-1-20-9-19-20 1-9 8-15 14-22 0 8 3 10 6 13-2-8 3-13 4-19Z' fill='%23ff7a45'/%3E%3Cpath d='M32 31c1 6-4 8-3 13 1 3 6 4 8 0 2-4-1-8-3-11 6 4 9 9 7 15-2 5-7 8-12 7-7-1-11-6-9-12 2-5 7-8 8-13 1 3 2 4 4 5Z' fill='%235de4ff'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="style.css?v=20261002-7" />
-    <script src="calculator.js?v=20261002-7" defer></script>
-  </head>
+    <link rel="stylesheet" href="style.css?v=20261003-11" />
+    <script src="profiles.js?v=20261003-1" defer></script>
+    <script src="calculator.js?v=20261003-10" defer></script>
+    <style>
+      .normal-section-toolbar,
+      .event-section-toolbar {
+        align-items: center;
+        flex-wrap: nowrap;
+        justify-content: flex-start;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+      }
+
+      .normal-section-toolbar h3,
+      .event-section-toolbar h3 {
+        flex: 0 0 auto;
+        white-space: nowrap;
+      }
+
+      .fire-display-select,
+      .event-cp-select {
+        flex: 0 0 auto;
+        width: 108px;
+        height: 36px;
+        padding: 0 32px 0 10px;
+        border: 1px solid #35506a;
+        border-radius: 8px;
+        outline: 0;
+        background: #0c1b2c;
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 800;
+      }
+
+      .fire-display-select:focus-visible,
+      .event-cp-select:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: 2px;
+      }
+
+      .fire-display-select option,
+      .event-cp-select option {
+        color: var(--text);
+        background: #0c1b2c;
+      }
+
+      .normal-section-toolbar .section-toolbar-actions,
+      .event-section-toolbar .section-toolbar-actions {
+        flex: 0 0 auto;
+        width: auto;
+        margin-left: auto;
+      }
+
+      .normal-section-toolbar .section-toolbar-actions .add-plan,
+      .event-section-toolbar .section-toolbar-actions .add-plan {
+        flex: 0 0 auto;
+      }
+    </style>
+</head>
   <body>
     <main class="app-shell">
       <header class="topbar">
@@ -33,28 +90,55 @@
         </div>
       </header>
 
+      <div class="profile-toolbar" data-profile-controls aria-label="Profile 管理"></div>
+
       <div class="workspace">
         <section class="control-panel" aria-label="計算條件">
           <div class="panel-heading">
             <span class="step-number">01</span>
             <div>
               <h2>建立評級選項</h2>
-              <p>拖曳隊伍可在一般與活動間移動，也可複製；缺少任一側時會暫停計算。</p>
+              <p>拖曳整張隊伍卡可排序或跨區移動；拖到新增按鈕複製，拖到垃圾桶刪除。</p>
             </div>
           </div>
 
           <div class="option-section normal-options-section">
-            <div class="section-toolbar">
+            <div class="section-toolbar normal-section-toolbar">
               <h3>一般評級與加成</h3>
-              <button type="button" class="add-plan" id="addNormal">＋ 新增一般</button>
+              <select class="fire-display-select" id="normalFireSelect" aria-label="每場獎勵顯示火量">
+         <option value="0">0 火</option>
+         <option value="1">1 火</option>
+         <option value="2">2 火</option>
+         <option value="3">3 火</option>
+         <option value="4">4 火</option>
+         <option value="5">5 火</option>
+         <option value="10">10 火</option>
+              </select>
+              <div class="section-toolbar-actions">
+                <button type="button" class="add-plan" id="addNormal" data-copy-drop="normal">＋ 新增一般</button>
+                <div class="drag-trash" id="optionTrash" aria-label="拖曳至此刪除隊伍" title="將隊伍拖曳到這裡刪除">
+                  <span aria-hidden="true">🗑</span><b>垃圾桶</b>
+                </div>
+              </div>
             </div>
             <div class="option-list" id="normalOptions" data-option-list="normal"></div>
           </div>
 
           <div class="option-section event-options-section">
-            <div class="section-toolbar">
+            <div class="section-toolbar event-section-toolbar">
               <h3>活動評級與加成</h3>
-              <button type="button" class="add-plan" id="addEvent">＋ 新增活動</button>
+              <select class="event-cp-select" id="eventCpSelect" aria-label="每場活動關卡 CP">
+                <option value="200">200 cp</option>
+                <option value="400">400 cp</option>
+                <option value="800">800 cp</option>
+                <option value="1600">1600 cp</option>
+              </select>
+              <div class="section-toolbar-actions">
+                <button type="button" class="add-plan" id="addEvent" data-copy-drop="event">＋ 新增活動</button>
+                <div class="drag-trash" id="eventOptionTrash" aria-label="拖曳至此刪除隊伍" title="將隊伍拖曳到這裡刪除">
+                  <span aria-hidden="true">🗑</span><b>垃圾桶</b>
+                </div>
+              </div>
             </div>
             <div class="option-list" id="eventOptions" data-option-list="event"></div>
           </div>
@@ -74,7 +158,7 @@
             <div class="input-grid">
               <label>
                 <span>目標 pt</span>
-                <span class="number-input"><input id="targetPt" type="number" min="0" step="1" value="1000" inputmode="decimal" /><b>pt</b></span>
+                <span class="number-input"><input id="targetPt" type="number" min="0" max="2147483647" step="1" value="1000" inputmode="numeric" /><b>pt</b></span>
               </label>
               <label>
                 <span>目標獎章</span>
@@ -85,14 +169,18 @@
 
           <div class="input-section owned">
             <h3>目前持有</h3>
-            <div class="input-grid">
+            <div class="input-grid owned-grid">
               <label>
                 <span>已有 pt</span>
-                <span class="number-input"><input id="ownedPt" type="number" min="0" step="1" value="0" inputmode="decimal" /><b>pt</b></span>
+                <span class="number-input"><input id="ownedPt" type="number" min="0" max="2147483647" step="1" value="0" inputmode="numeric" /><b>pt</b></span>
               </label>
               <label>
                 <span>已有獎章</span>
                 <span class="number-input"><input id="ownedItem" type="number" min="0" step="1" value="0" inputmode="decimal" /><b>個</b></span>
+              </label>
+              <label>
+                <span>已有 CP</span>
+                <span class="number-input"><input id="ownedCp" type="number" min="0" step="1" value="0" inputmode="numeric" /><b>CP</b></span>
               </label>
             </div>
             <p class="input-note">消火會以「目標－目前持有」計算，持有量已達目標時為 0 火。</p>
@@ -129,6 +217,7 @@
         </section>
 
         <aside class="result-panel" aria-live="polite">
+          <div class="result-panel-sticky">
           <div class="panel-heading light">
             <span class="step-number">03</span>
             <div>
@@ -158,6 +247,7 @@
               <p><b>獎章</b> = max（目標獎章－已有獎章，0）÷［5 ×（一般獎章 ×（1＋一般獎章加成）＋一般 cp × 活動獎章 ×（1＋活動獎章加成））］</p>
             </div>
           </details>
+          </div>
         </aside>
       </div>
 
@@ -221,7 +311,7 @@
 
       <section class="transfer-section">
         <h3>匯出</h3>
-        <p>Base64 內容是 UTF-8 JSON，可用來在其他瀏覽器還原目前設定。</p>
+        <p>只匯出目前 profile；Base64 內容是 UTF-8 JSON，可用來在其他瀏覽器還原設定。</p>
         <label>
           <span>Base64 資料</span>
           <textarea id="exportData" readonly rows="5" spellcheck="false"></textarea>
@@ -234,7 +324,7 @@
 
       <section class="transfer-section">
         <h3>匯入</h3>
-        <p>可貼上此工具匯出的 Base64，或直接貼上原始 JSON。</p>
+        <p>可貼上此工具匯出的 Base64 或 JSON；只會覆蓋目前 profile。</p>
         <label>
           <span>Base64 或 JSON</span>
           <textarea id="importData" rows="5" spellcheck="false" placeholder="貼上資料…"></textarea>
@@ -249,5 +339,5 @@
         <p class="transfer-status" id="transferStatus" role="status" aria-live="polite"></p>
       </section>
     </dialog>
-  </body>
+</body>
 </html>

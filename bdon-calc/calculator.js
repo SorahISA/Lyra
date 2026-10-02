@@ -82,7 +82,10 @@ const shopItems = [
   { id: "azure-s-open", name: "紺碧碎片（小）", quantity: 10, price: 1800, limit: null, icon: `${itemAssetRoot}/fragment/item_icon_fragment_004/item_icon_fragment_004.webp` },
 ];
 
-const STORAGE_KEY = "bdon-calc-teams-v1";
+const STORAGE_KEY = window.BdonProfiles?.stateKey() ?? "bdon-calc-teams-v1";
+const OPTIMIZER_KEY = window.BdonProfiles?.optimizerKey() ?? "bdon-calc-optimizer-v1";
+const PREVIEW_FIRES = [0, 1, 2, 3, 4, 5, 10];
+const PREVIEW_CPS = [200, 400, 800, 1600];
 const defaultOptions = {
   normal: [{ id: 1, name: "一般隊伍 1", rank: "A", pt: 0, item: 0 }],
   event: [{ id: 1, name: "活動隊伍 1", rank: "A", pt: 0, item: 0 }],
@@ -96,8 +99,8 @@ function sanitizeOptions(options, mode) {
       ? option.name.trim()
       : `${mode === "normal" ? "一般隊伍" : "活動隊伍"} ${index + 1}`,
     rank: availableRanks[mode].includes(option?.rank) ? option.rank : (mode === "event" ? "C" : "A"),
-    pt: Math.max(0, Number.parseFloat(option?.pt) || 0),
-    item: Math.max(0, Number.parseFloat(option?.item) || 0),
+    pt: Math.min(500, Math.max(0, Math.floor(Number.parseFloat(option?.pt) || 0))),
+    item: Math.min(500, Math.max(0, Math.floor(Number.parseFloat(option?.item) || 0))),
   }));
 }
 
@@ -138,6 +141,9 @@ function loadState() {
       targetItem: Number.isFinite(Number.parseFloat(saved?.targetItem)) ? Math.max(0, Number.parseFloat(saved.targetItem)) : 1000,
       ownedPt: Math.max(0, Number.parseFloat(saved?.ownedPt) || 0),
       ownedItem: Math.max(0, Number.parseFloat(saved?.ownedItem) || 0),
+      ownedCp: Math.max(0, Math.floor(Number.parseFloat(saved?.ownedCp) || 0)),
+      previewFire: PREVIEW_FIRES.includes(Number(saved?.previewFire)) ? Number(saved.previewFire) : 5,
+      previewCp: PREVIEW_CPS.includes(Number(saved?.previewCp)) ? Number(saved.previewCp) : 200,
       shopSelections: sanitizeShopSelections(saved),
     };
   } catch {
@@ -150,6 +156,9 @@ function loadState() {
       targetItem: 1000,
       ownedPt: 0,
       ownedItem: 0,
+      ownedCp: 0,
+      previewFire: 5,
+      previewCp: 200,
       shopSelections: sanitizeShopSelections(null),
     };
   }
@@ -164,6 +173,7 @@ const targetPt = document.querySelector("#targetPt");
 const targetItem = document.querySelector("#targetItem");
 const ownedPt = document.querySelector("#ownedPt");
 const ownedItem = document.querySelector("#ownedItem");
+const ownedCp = document.querySelector("#ownedCp");
 const rewardList = document.querySelector("#rewardList");
 const rewardTargetSummary = document.querySelector("#rewardTargetSummary");
 const shopGrid = document.querySelector("#shopGrid");
@@ -189,6 +199,7 @@ const escapeHtml = (value) => String(value)
   .replaceAll('"', "&quot;")
   .replaceAll("'", "&#039;");
 let draggedOption = null;
+let dragStartedFromControl = false;
 
 function persistState() {
   try {
@@ -199,6 +210,9 @@ function persistState() {
       targetItem: safeNumber(targetItem.value),
       ownedPt: safeNumber(ownedPt.value),
       ownedItem: safeNumber(ownedItem.value),
+      ownedCp: Math.floor(safeNumber(ownedCp.value)),
+      previewFire: state.previewFire,
+      previewCp: state.previewCp,
       shopSelections: state.shopSelections,
       shopQuantityDefaultsVersion: 2,
     }));
@@ -208,9 +222,17 @@ function persistState() {
 }
 
 function portableState() {
+  let optimizerSettings = { maxFire: 5 };
+  try {
+    const saved = JSON.parse(localStorage.getItem(OPTIMIZER_KEY));
+    if ([3, 4, 5].includes(Number(saved?.maxFire))) optimizerSettings.maxFire = Number(saved.maxFire);
+  } catch {
+    // Keep the default optimizer setting when its storage is unavailable.
+  }
   return {
     format: "bdon-calc",
     version: 1,
+    profile: window.BdonProfiles?.active() ?? { id: "legacy", name: "預設" },
     state: {
       normalOptions: state.normalOptions,
       eventOptions: state.eventOptions,
@@ -218,8 +240,12 @@ function portableState() {
       targetItem: safeNumber(targetItem.value),
       ownedPt: safeNumber(ownedPt.value),
       ownedItem: safeNumber(ownedItem.value),
+      ownedCp: Math.floor(safeNumber(ownedCp.value)),
+      previewFire: state.previewFire,
+      previewCp: state.previewCp,
       shopSelections: state.shopSelections,
       shopQuantityDefaultsVersion: 2,
+      optimizerSettings,
     },
   };
 }
@@ -263,11 +289,21 @@ function applyPortableState(payload) {
     shopSelections: imported.shopSelections,
     shopQuantityDefaultsVersion: 2,
   });
+  state.previewFire = PREVIEW_FIRES.includes(Number(imported.previewFire)) ? Number(imported.previewFire) : 5;
+  state.previewCp = PREVIEW_CPS.includes(Number(imported.previewCp)) ? Number(imported.previewCp) : 200;
+  if ([3, 4, 5].includes(Number(imported.optimizerSettings?.maxFire))) {
+    try {
+      localStorage.setItem(OPTIMIZER_KEY, JSON.stringify({ maxFire: Number(imported.optimizerSettings.maxFire) }));
+    } catch {
+      // Import the calculator data even if local browser storage is unavailable.
+    }
+  }
 
   targetPt.value = transferNumber(imported.targetPt, 1000);
   targetItem.value = transferNumber(imported.targetItem, 1000);
   ownedPt.value = transferNumber(imported.ownedPt);
   ownedItem.value = transferNumber(imported.ownedItem);
+  ownedCp.value = Math.floor(transferNumber(imported.ownedCp));
   renderOptions();
   renderRewardList();
   renderShopGrid();
@@ -294,6 +330,45 @@ function rateNumberMarkup(value, alignDecimals) {
   return `<b>${whole}</b><em class="${fraction ? "" : "phantom"}">.${fraction || "00"}</em>`;
 }
 
+function previewMultiplier() {
+  return state.previewFire === 0 ? 1 : state.previewFire * 5;
+}
+
+function compactNumber(value) {
+  return new Intl.NumberFormat("zh-TW", { maximumFractionDigits: 2 }).format(value);
+}
+
+function decimalAlignedPreviewNumber(value) {
+  const [whole, fraction = ""] = String(value).split(".");
+  const visibleFraction = fraction.slice(0, 2);
+  const phantomFraction = "0".repeat(2 - visibleFraction.length);
+  return `<b class="decimal-preview-number"><span>${whole}</span>${visibleFraction
+    ? `<span>.${visibleFraction}</span><span class="phantom-decimal">${phantomFraction}</span>`
+    : '<span class="phantom-decimal">.00</span>'}</b>`;
+}
+
+function normalRatePreviewContent(option, rate) {
+  const multiplier = previewMultiplier();
+  const rows = [
+    [rate.pt, "pt", Math.floor(rate.pt * multiplier * (1 + percent(option.pt)))],
+    [rate.item, "獎章", Math.floor(rate.item * multiplier * (1 + percent(option.item)))],
+    [rate.cp, "cp", rate.cp * multiplier],
+  ];
+  return `<span class="rate-preview-grid">
+    ${rows.map(([base, unit, result]) => `<span class="rate-preview-row"><b>${compactNumber(base)}</b><i>${unit}</i><em>→</em><strong>${compactNumber(result)}</strong><i>${unit}</i></span>`).join("")}
+  </span>`;
+}
+
+function eventRatePreviewContent(option, rate) {
+  const rows = [
+    [rate.pt, "pt", Math.floor(rate.pt * state.previewCp * (1 + percent(option.pt)))],
+    [rate.item, "獎章", Math.floor(rate.item * state.previewCp * (1 + percent(option.item)))],
+  ];
+  return `<span class="rate-preview-grid decimal-rate-preview">
+    ${rows.map(([base, unit, result]) => `<span class="rate-preview-row">${decimalAlignedPreviewNumber(base)}<i>${unit}</i><em>→</em><strong>${compactNumber(result)}</strong><i>${unit}</i></span>`).join("")}
+  </span>`;
+}
+
 function rankButtons(option, mode) {
   return ["SS", "S", "A", "B", "C", "D"].map((rank) => {
     const disabled = !availableRanks[mode].includes(rank);
@@ -314,7 +389,10 @@ function optionMarkup(option, mode, index) {
   const summaryMarkup = summary.map(([value, unit]) =>
     `<span>${rateNumberMarkup(value, !isNormal)}<i>${unit}${rate.approximate && unit === "獎章" ? '<small class="approx-inline">不準確</small>' : ""}</i></span>`
   ).join("");
-  return `<article class="option-card" data-option-type="${mode}" data-option-id="${option.id}">
+  const rateMarkup = `<span class="normal-rate-preview">
+    ${isNormal ? normalRatePreviewContent(option, rate) : eventRatePreviewContent(option, rate)}
+  </span>`;
+  return `<article class="option-card" draggable="true" data-option-type="${mode}" data-option-id="${option.id}" title="拖曳隊伍以排序、移動、複製或刪除">
     <div class="option-main">
       <div class="option-head">
         <div class="option-title">
@@ -322,12 +400,7 @@ function optionMarkup(option, mode, index) {
           <span class="option-name" contenteditable="true" spellcheck="false" data-option-name aria-label="重新命名${label}隊伍">${escapeHtml(option.name)}</span>
           <span class="winner-marks"></span>
         </div>
-        <div class="option-actions">
-          <span class="rate-summary ${isNormal ? "whole-only" : "decimal-aligned"}" aria-label="${summary.map(([value, unit]) => `${value} ${unit}`).join("、")}">${summaryMarkup}</span>
-          <button type="button" class="copy-option" data-copy-option="${option.id}">複製</button>
-          <button type="button" class="remove-plan" data-remove-option="${option.id}">移除</button>
-          <span class="drag-handle" draggable="true" data-drag-option="${option.id}" role="button" aria-label="拖曳${label}隊伍 ${index + 1}" title="拖曳至另一區">⠿</span>
-        </div>
+        ${rateMarkup}
       </div>
       <div class="rank-options" aria-label="${label}選項 ${index + 1} 評級">
         ${rankButtons(option, mode)}
@@ -336,11 +409,11 @@ function optionMarkup(option, mode, index) {
     <div class="option-bonuses">
       <label>
         <span>pt 加成</span>
-        <span class="number-input"><input type="number" min="0" step="1" value="${option.pt}" inputmode="decimal" data-option-field="pt" aria-label="${label}選項 ${index + 1} pt 加成" /><b>%</b></span>
+        <span class="number-input"><input type="number" min="0" max="500" step="1" value="${option.pt}" inputmode="numeric" data-option-field="pt" aria-label="${label}選項 ${index + 1} pt 加成" /><b>%</b></span>
       </label>
       <label>
         <span>獎章加成</span>
-        <span class="number-input"><input type="number" min="0" step="1" value="${option.item}" inputmode="decimal" data-option-field="item" aria-label="${label}選項 ${index + 1} 獎章加成" /><b>%</b></span>
+        <span class="number-input"><input type="number" min="0" max="500" step="1" value="${option.item}" inputmode="numeric" data-option-field="item" aria-label="${label}選項 ${index + 1} 獎章加成" /><b>%</b></span>
       </label>
     </div>
   </article>`;
@@ -349,6 +422,8 @@ function optionMarkup(option, mode, index) {
 function renderOptions(focusMode = null) {
   normalOptions.innerHTML = state.normalOptions.map((option, index) => optionMarkup(option, "normal", index)).join("");
   eventOptions.innerHTML = state.eventOptions.map((option, index) => optionMarkup(option, "event", index)).join("");
+  document.querySelector("#normalFireSelect").value = String(state.previewFire);
+  document.querySelector("#eventCpSelect").value = String(state.previewCp);
   persistState();
   if (focusMode) document.querySelector(`#${focusMode}Options`)?.lastElementChild?.querySelector(".rank:not(:disabled)")?.focus();
 }
@@ -568,7 +643,14 @@ function handleOptionInput(event) {
   if (!input || !card) return;
   const list = state[`${card.dataset.optionType}Options`];
   const option = list.find((item) => item.id === Number(card.dataset.optionId));
-  option[input.dataset.optionField] = safeNumber(input.value);
+  option[input.dataset.optionField] = Math.min(500, Math.floor(safeNumber(input.value)));
+  if (safeNumber(input.value) > 500 || !Number.isInteger(Number.parseFloat(input.value))) {
+    input.value = option[input.dataset.optionField];
+  }
+  const mode = card.dataset.optionType;
+  card.querySelector(".normal-rate-preview").innerHTML = mode === "normal"
+    ? normalRatePreviewContent(option, rates.normal[option.rank])
+    : eventRatePreviewContent(option, rates.event[option.rank]);
   persistState();
   calculate();
 }
@@ -580,8 +662,6 @@ function handleOptionClick(event) {
   const list = state[`${mode}Options`];
   const option = list.find((item) => item.id === Number(card.dataset.optionId));
   const rankButton = event.target.closest("[data-rank]:not(:disabled)");
-  const copyButton = event.target.closest("[data-copy-option]");
-  const removeButton = event.target.closest("[data-remove-option]");
 
   if (rankButton) {
     option.rank = rankButton.dataset.rank;
@@ -589,24 +669,11 @@ function handleOptionClick(event) {
     calculate();
   }
 
-  if (copyButton) {
-    const counterName = `next${mode[0].toUpperCase()}${mode.slice(1)}Id`;
-    list.push({ ...option, id: state[counterName]++, name: `${option.name} 副本` });
-    renderOptions(mode);
-    calculate();
-  }
-
-  if (removeButton) {
-    state[`${mode}Options`] = list.filter((item) => item.id !== option.id);
-    renderOptions();
-    calculate();
-  }
 }
 
 function handleDragStart(event) {
-  const handle = event.target.closest("[data-drag-option]");
   const card = event.target.closest("[data-option-id]");
-  if (!handle || !card) {
+  if (!card || dragStartedFromControl) {
     event.preventDefault();
     return;
   }
@@ -615,54 +682,132 @@ function handleDragStart(event) {
     id: Number(card.dataset.optionId),
   };
   card.classList.add("dragging");
-  event.dataTransfer.effectAllowed = "move";
+  document.body.classList.add("option-is-dragging");
+  event.dataTransfer.effectAllowed = "copyMove";
   event.dataTransfer.setData("text/plain", `${draggedOption.mode}:${draggedOption.id}`);
+}
+
+function clearDropIndicators() {
+  document.querySelectorAll(".drop-before, .drop-after, .drop-active, .option-list.drag-over").forEach((element) => {
+    element.classList.remove("drop-before", "drop-after", "drop-active", "drag-over");
+  });
 }
 
 function handleDragEnd() {
   draggedOption = null;
-  document.querySelectorAll(".option-card.dragging, .option-list.drag-over").forEach((element) => {
-    element.classList.remove("dragging", "drag-over");
-  });
+  dragStartedFromControl = false;
+  document.body.classList.remove("option-is-dragging");
+  document.querySelectorAll(".option-card.dragging").forEach((element) => element.classList.remove("dragging"));
+  clearDropIndicators();
 }
 
-function handleDrop(event) {
-  event.preventDefault();
-  const targetMode = event.currentTarget.dataset.optionList;
-  event.currentTarget.classList.remove("drag-over");
+function ensureDraggedOption(event) {
   if (!draggedOption) {
     const [mode, rawId] = event.dataTransfer.getData("text/plain").split(":");
-    if (!mode || !rawId) return;
+    if (!mode || !rawId) return null;
     draggedOption = { mode, id: Number(rawId) };
   }
+  return draggedOption;
+}
+
+function dropPlacement(list, pointerY, showIndicator = false) {
+  const cards = [...list.querySelectorAll(".option-card:not(.dragging)")];
+  if (!cards.length) return { targetId: null, position: "after" };
+  for (const card of cards) {
+    const rect = card.getBoundingClientRect();
+    if (pointerY < rect.top + rect.height / 2) {
+      if (showIndicator) card.classList.add("drop-before");
+      return { targetId: Number(card.dataset.optionId), position: "before" };
+    }
+  }
+  const last = cards[cards.length - 1];
+  if (showIndicator) last.classList.add("drop-after");
+  return { targetId: Number(last.dataset.optionId), position: "after" };
+}
+
+function moveDraggedOption(targetMode, placement) {
+  if (!draggedOption) return;
 
   const sourceMode = draggedOption.mode;
   const sourceList = state[`${sourceMode}Options`];
   const targetList = state[`${targetMode}Options`];
   const sourceIndex = sourceList.findIndex((item) => item.id === draggedOption.id);
   if (sourceIndex < 0) return;
-
-  if (sourceMode === targetMode) {
-    const [option] = sourceList.splice(sourceIndex, 1);
-    sourceList.push(option);
-  } else {
-    const [option] = sourceList.splice(sourceIndex, 1);
+  let insertIndex = placement.targetId === null
+    ? targetList.length
+    : targetList.findIndex((item) => item.id === placement.targetId) + (placement.position === "after" ? 1 : 0);
+  const [option] = sourceList.splice(sourceIndex, 1);
+  if (sourceMode === targetMode && sourceIndex < insertIndex) insertIndex -= 1;
+  let moved = option;
+  if (sourceMode !== targetMode) {
     const counterName = `next${targetMode[0].toUpperCase()}${targetMode.slice(1)}Id`;
-    targetList.push({
+    moved = {
       ...option,
       id: state[counterName]++,
       rank: availableRanks[targetMode].includes(option.rank) ? option.rank : "C",
-    });
+    };
   }
+  targetList.splice(Math.max(0, insertIndex), 0, moved);
+}
 
-  draggedOption = null;
+function handleDrop(event) {
+  event.preventDefault();
+  if (!ensureDraggedOption(event)) return;
+  const targetMode = event.currentTarget.dataset.optionList;
+  const placement = dropPlacement(event.currentTarget, event.clientY);
+  moveDraggedOption(targetMode, placement);
+  handleDragEnd();
   renderOptions();
   calculate();
 }
 
+function copyDraggedOption(targetMode) {
+  if (!draggedOption) return;
+  const source = state[`${draggedOption.mode}Options`].find((option) => option.id === draggedOption.id);
+  if (!source) return;
+  const counterName = `next${targetMode[0].toUpperCase()}${targetMode.slice(1)}Id`;
+  state[`${targetMode}Options`].push({
+    ...source,
+    id: state[counterName]++,
+    name: `${source.name} 副本`,
+    rank: availableRanks[targetMode].includes(source.rank) ? source.rank : "C",
+  });
+}
+
+function setupActionDropZone(element, dropEffect, action) {
+  element.addEventListener("dragover", (event) => {
+    event.preventDefault();
+    clearDropIndicators();
+    element.classList.add("drop-active");
+    event.dataTransfer.dropEffect = dropEffect;
+  });
+  element.addEventListener("dragleave", () => element.classList.remove("drop-active"));
+  element.addEventListener("drop", (event) => {
+    event.preventDefault();
+    if (!ensureDraggedOption(event)) return;
+    action();
+    handleDragEnd();
+    renderOptions();
+    calculate();
+  });
+}
+
 document.querySelector("#addNormal").addEventListener("click", () => addOption("normal"));
 document.querySelector("#addEvent").addEventListener("click", () => addOption("event"));
+document.querySelector("#normalFireSelect").addEventListener("change", (event) => {
+  state.previewFire = Number(event.target.value);
+  renderOptions();
+  calculate();
+});
+document.querySelector("#eventCpSelect").addEventListener("change", (event) => {
+  state.previewCp = Number(event.target.value);
+  renderOptions();
+  calculate();
+});
 [normalOptions, eventOptions].forEach((list) => {
+  list.addEventListener("pointerdown", (event) => {
+    dragStartedFromControl = Boolean(event.target.closest("input, button, [contenteditable='true'], label"));
+  }, true);
   list.addEventListener("input", handleOptionInput);
   list.addEventListener("click", handleOptionClick);
   list.addEventListener("keydown", (event) => {
@@ -689,19 +834,37 @@ document.querySelector("#addEvent").addEventListener("click", () => addOption("e
   list.addEventListener("dragover", (event) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
+    clearDropIndicators();
     list.classList.add("drag-over");
+    dropPlacement(list, event.clientY, true);
   });
   list.addEventListener("dragleave", (event) => {
-    if (!list.contains(event.relatedTarget)) list.classList.remove("drag-over");
+    if (!list.contains(event.relatedTarget)) clearDropIndicators();
   });
   list.addEventListener("drop", handleDrop);
+});
+
+document.querySelectorAll("[data-copy-drop]").forEach((button) => {
+  setupActionDropZone(button, "copy", () => copyDraggedOption(button.dataset.copyDrop));
+});
+
+setupActionDropZone(document.querySelector("#optionTrash"), "move", () => {
+  if (!draggedOption) return;
+  state[`${draggedOption.mode}Options`] = state[`${draggedOption.mode}Options`]
+    .filter((option) => option.id !== draggedOption.id);
+});
+setupActionDropZone(document.querySelector("#eventOptionTrash"), "move", () => {
+  if (!draggedOption) return;
+  state[`${draggedOption.mode}Options`] = state[`${draggedOption.mode}Options`]
+    .filter((option) => option.id !== draggedOption.id);
 });
 targetPt.value = state.targetPt;
 targetItem.value = state.targetItem;
 ownedPt.value = state.ownedPt;
 ownedItem.value = state.ownedItem;
+ownedCp.value = state.ownedCp;
 
-[targetPt, targetItem, ownedPt, ownedItem].forEach((field) => field.addEventListener("input", () => {
+[targetPt, targetItem, ownedPt, ownedItem, ownedCp].forEach((field) => field.addEventListener("input", () => {
   if (field === targetItem) {
     Object.values(state.shopSelections).forEach((selection) => { selection.checked = false; });
     renderShopGrid();
@@ -793,7 +956,9 @@ document.querySelector("#downloadExportJson").addEventListener("click", () => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = "bdon-calc-data.json";
+  const profileName = window.BdonProfiles?.active().name ?? "default";
+  const safeName = profileName.replaceAll(/[^\p{L}\p{N}_-]+/gu, "-").replaceAll(/^-|-$/g, "") || "profile";
+  link.download = `bdon-calc-${safeName}.json`;
   link.click();
   URL.revokeObjectURL(url);
   transferStatus.textContent = "JSON 已下載。";
