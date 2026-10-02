@@ -14,8 +14,8 @@
       type="image/svg+xml"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2308111f'/%3E%3Cpath d='M35 8c3 12-6 14-2 23 2-6 8-8 9-15 9 10 13 19 8 29-4 8-12 12-20 11-12-1-20-9-19-20 1-9 8-15 14-22 0 8 3 10 6 13-2-8 3-13 4-19Z' fill='%23ff7a45'/%3E%3Cpath d='M32 31c1 6-4 8-3 13 1 3 6 4 8 0 2-4-1-8-3-11 6 4 9 9 7 15-2 5-7 8-12 7-7-1-11-6-9-12 2-5 7-8 8-13 1 3 2 4 4 5Z' fill='%235de4ff'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="style.css?v=20261002-6" />
-    <script src="calculator.js?v=20261002-6" defer></script>
+    <link rel="stylesheet" href="style.css?v=20261002-7" />
+    <script src="calculator.js?v=20261002-7" defer></script>
   </head>
   <body>
     <main class="app-shell">
@@ -24,9 +24,12 @@
           <p class="eyebrow">BDON RESOURCE TOOL</p>
           <h1>火量計算器</h1>
         </div>
-        <div class="status-chip" aria-label="計算狀態">
-          <span class="status-dot" aria-hidden="true"></span>
-          即時計算
+        <div class="topbar-actions">
+          <button type="button" class="data-transfer-button" id="openDataTransfer">匯入／匯出</button>
+          <div class="status-chip" aria-label="計算狀態">
+            <span class="status-dot" aria-hidden="true"></span>
+            即時計算
+          </div>
         </div>
       </header>
 
@@ -206,5 +209,45 @@
         </div>
       </section>
     </main>
+
+    <dialog class="transfer-dialog" id="dataTransferDialog" aria-labelledby="dataTransferTitle">
+      <div class="transfer-heading">
+        <div>
+          <p class="eyebrow">PORTABLE SAVE DATA</p>
+          <h2 id="dataTransferTitle">資料匯入／匯出</h2>
+        </div>
+        <button type="button" class="dialog-close" id="closeDataTransfer" aria-label="關閉">×</button>
+      </div>
+
+      <section class="transfer-section">
+        <h3>匯出</h3>
+        <p>Base64 內容是 UTF-8 JSON，可用來在其他瀏覽器還原目前設定。</p>
+        <label>
+          <span>Base64 資料</span>
+          <textarea id="exportData" readonly rows="5" spellcheck="false"></textarea>
+        </label>
+        <div class="transfer-actions">
+          <button type="button" id="copyExportData">複製 Base64</button>
+          <button type="button" id="downloadExportJson">下載 JSON</button>
+        </div>
+      </section>
+
+      <section class="transfer-section">
+        <h3>匯入</h3>
+        <p>可貼上此工具匯出的 Base64，或直接貼上原始 JSON。</p>
+        <label>
+          <span>Base64 或 JSON</span>
+          <textarea id="importData" rows="5" spellcheck="false" placeholder="貼上資料…"></textarea>
+        </label>
+        <div class="transfer-actions">
+          <label class="file-import-button">
+            <input type="file" id="importDataFile" accept=".json,.txt,application/json,text/plain" />
+            讀取檔案
+          </label>
+          <button type="button" class="primary" id="applyImportData">驗證並匯入</button>
+        </div>
+        <p class="transfer-status" id="transferStatus" role="status" aria-live="polite"></p>
+      </section>
+    </dialog>
   </body>
 </html>

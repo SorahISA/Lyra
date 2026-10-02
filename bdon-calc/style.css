@@ -30,6 +30,10 @@ button, input, select { font: inherit; }
 
 .app-shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 44px 0 64px; }
 .topbar { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
+.topbar-actions { display: flex; align-items: center; gap: 9px; }
+.data-transfer-button { padding: 10px 14px; border: 1px solid #36516c; border-radius: 999px; background: #0d1c2d; color: #c7d7e9; cursor: pointer; font-size: .78rem; font-weight: 800; }
+.data-transfer-button:hover { border-color: var(--cyan); color: var(--cyan); }
+.data-transfer-button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 .eyebrow { margin: 0 0 6px; color: var(--cyan); font-size: .76rem; font-weight: 800; letter-spacing: .18em; }
 h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.65rem); line-height: 1; letter-spacing: -.055em; }
 .status-chip { display: flex; align-items: center; gap: 9px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 999px; color: #bfd0e4; font-size: .86rem; }
@@ -192,6 +196,28 @@ label > span:first-child { display: block; margin: 0 0 7px; color: var(--muted);
 .shop-bulk-actions button:hover { border-color: var(--cyan); color: var(--cyan); }
 .shop-bulk-actions button.accent { border-color: rgb(255 122 69 / 55%); color: var(--orange-soft); }
 .shop-bulk-actions button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.transfer-dialog { width: min(680px, calc(100% - 28px)); max-height: min(840px, calc(100vh - 28px)); padding: 0; overflow: auto; border: 1px solid #304760; border-radius: 20px; background: #0b1726; color: var(--text); box-shadow: 0 30px 100px rgb(0 0 0 / 58%); }
+.transfer-dialog::backdrop { background: rgb(3 9 16 / 72%); backdrop-filter: blur(4px); }
+.transfer-heading { position: sticky; z-index: 2; top: 0; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 22px 24px; border-bottom: 1px solid var(--line); background: rgb(11 23 38 / 96%); }
+.transfer-heading h2 { margin: 0; font-size: 1.15rem; }
+.dialog-close { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid #39516b; border-radius: 9px; background: #101f31; color: #b9c9dc; cursor: pointer; font-size: 1.1rem; }
+.dialog-close:hover { border-color: var(--cyan); color: var(--cyan); }
+.transfer-section { padding: 22px 24px; }
+.transfer-section + .transfer-section { border-top: 1px solid var(--line); }
+.transfer-section h3 { margin: 0 0 5px; font-size: .9rem; }
+.transfer-section > p { margin: 0 0 14px; color: var(--muted); font-size: .75rem; line-height: 1.55; }
+.transfer-section textarea { width: 100%; min-height: 112px; resize: vertical; padding: 12px; border: 1px solid #30465e; border-radius: 10px; outline: 0; background: #071320; color: #dce8f6; font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; font-size: .72rem; line-height: 1.5; }
+.transfer-section textarea:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px rgb(93 228 255 / 10%); }
+.transfer-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.transfer-actions button, .file-import-button { padding: 9px 12px; border: 1px solid #39536e; border-radius: 8px; background: #102237; color: #c7d7e9; cursor: pointer; font-size: .74rem; font-weight: 800; }
+.transfer-actions button:hover, .file-import-button:hover { border-color: var(--cyan); color: var(--cyan); }
+.transfer-actions button.primary { border-color: var(--cyan); background: rgb(93 228 255 / 13%); color: var(--cyan); }
+.file-import-button input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.file-import-button:focus-within { outline: 2px solid var(--cyan); outline-offset: 2px; }
+.transfer-status { margin: 12px 0 0 !important; padding: 9px 11px; border-radius: 8px; font-weight: 700; }
+.transfer-status:empty { display: none; }
+.transfer-status.success { background: rgb(93 228 255 / 10%); color: var(--cyan); }
+.transfer-status.error { background: rgb(255 122 69 / 11%); color: #ff9b79; }
 .shop-picker { margin-top: 14px; }
 .shop-picker select { width: 100%; height: 48px; padding: 0 38px 0 13px; border: 1px solid #3c4b5f; border-radius: 11px; outline: 0; background: #081423; color: var(--text); font-weight: 700; cursor: pointer; }
 .shop-picker select:focus-visible { border-color: var(--cyan); outline: 2px solid var(--cyan); outline-offset: 2px; }
@@ -261,6 +287,7 @@ label > span:first-child { display: block; margin: 0 0 7px; color: var(--muted);
 @media (max-width: 620px) {
   .app-shell { width: min(100% - 24px, 1180px); padding: 28px 0 40px; }
   .topbar { align-items: start; }
+  .topbar-actions { align-items: flex-end; flex-direction: column-reverse; }
   .status-chip { padding: 8px 10px; font-size: .75rem; }
   .control-panel, .result-panel { padding: 22px 18px; }
   .rate-reference { padding: 22px 18px; }
@@ -270,6 +297,7 @@ label > span:first-child { display: block; margin: 0 0 7px; color: var(--muted);
   .reward-row { grid-template-columns: 46px minmax(0, 1fr) 78px; }
   .reward-stamp { right: 64px; }
   .target-picker summary { align-items: flex-start; flex-wrap: wrap; }
+  .transfer-heading, .transfer-section { padding-right: 18px; padding-left: 18px; }
   .option-card { grid-template-columns: 1fr; }
   .plan-mode { grid-template-columns: 1fr; }
   .rank-card legend { align-items: start; flex-direction: column; gap: 4px; }

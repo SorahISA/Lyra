@@ -168,6 +168,11 @@ const rewardList = document.querySelector("#rewardList");
 const rewardTargetSummary = document.querySelector("#rewardTargetSummary");
 const shopGrid = document.querySelector("#shopGrid");
 const shopTargetSummary = document.querySelector("#shopTargetSummary");
+const dataTransferDialog = document.querySelector("#dataTransferDialog");
+const exportData = document.querySelector("#exportData");
+const importData = document.querySelector("#importData");
+const importDataFile = document.querySelector("#importDataFile");
+const transferStatus = document.querySelector("#transferStatus");
 
 const format = (value, digits = 2) =>
   new Intl.NumberFormat("zh-TW", {
@@ -200,6 +205,87 @@ function persistState() {
   } catch {
     // The calculator still works if local browser storage is unavailable.
   }
+}
+
+function portableState() {
+  return {
+    format: "bdon-calc",
+    version: 1,
+    state: {
+      normalOptions: state.normalOptions,
+      eventOptions: state.eventOptions,
+      targetPt: safeNumber(targetPt.value),
+      targetItem: safeNumber(targetItem.value),
+      ownedPt: safeNumber(ownedPt.value),
+      ownedItem: safeNumber(ownedItem.value),
+      shopSelections: state.shopSelections,
+      shopQuantityDefaultsVersion: 2,
+    },
+  };
+}
+
+function encodeBase64Json(value) {
+  const bytes = new TextEncoder().encode(JSON.stringify(value));
+  let binary = "";
+  bytes.forEach((byte) => { binary += String.fromCharCode(byte); });
+  return btoa(binary);
+}
+
+function decodeBase64Json(value) {
+  const binary = atob(value.replaceAll(/\s/g, ""));
+  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+function refreshExportData() {
+  exportData.value = encodeBase64Json(portableState());
+}
+
+function transferNumber(value, fallback = 0) {
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : fallback;
+}
+
+function applyPortableState(payload) {
+  if (payload?.format !== "bdon-calc" || payload?.version !== 1 || !payload.state) {
+    throw new Error("這不是有效的 BDON 計算器資料。");
+  }
+  const imported = payload.state;
+  if (!Array.isArray(imported.normalOptions) || !Array.isArray(imported.eventOptions)) {
+    throw new Error("資料缺少一般或活動隊伍。");
+  }
+
+  state.normalOptions = sanitizeOptions(imported.normalOptions, "normal");
+  state.eventOptions = sanitizeOptions(imported.eventOptions, "event");
+  state.nextNormalId = state.normalOptions.length + 1;
+  state.nextEventId = state.eventOptions.length + 1;
+  state.shopSelections = sanitizeShopSelections({
+    shopSelections: imported.shopSelections,
+    shopQuantityDefaultsVersion: 2,
+  });
+
+  targetPt.value = transferNumber(imported.targetPt, 1000);
+  targetItem.value = transferNumber(imported.targetItem, 1000);
+  ownedPt.value = transferNumber(imported.ownedPt);
+  ownedItem.value = transferNumber(imported.ownedItem);
+  renderOptions();
+  renderRewardList();
+  renderShopGrid();
+  if (Object.values(state.shopSelections).some((selection) => selection.checked)) {
+    updateShopTarget();
+  } else {
+    shopTargetSummary.textContent = "尚未選擇";
+    persistState();
+    calculate();
+  }
+  refreshExportData();
+}
+
+function importPortableText(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed) throw new Error("請先貼上 Base64 或 JSON。");
+  const payload = trimmed.startsWith("{") ? JSON.parse(trimmed) : decodeBase64Json(trimmed);
+  applyPortableState(payload);
 }
 
 function rateNumberMarkup(value, alignDecimals) {
@@ -675,6 +761,71 @@ document.querySelector(".shop-bulk-actions").addEventListener("click", (event) =
   });
   renderShopGrid();
   updateShopTarget();
+});
+
+document.querySelector("#openDataTransfer").addEventListener("click", () => {
+  refreshExportData();
+  transferStatus.textContent = "";
+  transferStatus.className = "transfer-status";
+  if (typeof dataTransferDialog.showModal === "function") dataTransferDialog.showModal();
+  else dataTransferDialog.setAttribute("open", "");
+});
+
+document.querySelector("#closeDataTransfer").addEventListener("click", () => dataTransferDialog.close());
+dataTransferDialog.addEventListener("click", (event) => {
+  if (event.target === dataTransferDialog) dataTransferDialog.close();
+});
+
+document.querySelector("#copyExportData").addEventListener("click", async () => {
+  refreshExportData();
+  try {
+    await navigator.clipboard.writeText(exportData.value);
+  } catch {
+    exportData.select();
+    document.execCommand("copy");
+  }
+  transferStatus.textContent = "Base64 已複製。";
+  transferStatus.className = "transfer-status success";
+});
+
+document.querySelector("#downloadExportJson").addEventListener("click", () => {
+  const blob = new Blob([JSON.stringify(portableState(), null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "bdon-calc-data.json";
+  link.click();
+  URL.revokeObjectURL(url);
+  transferStatus.textContent = "JSON 已下載。";
+  transferStatus.className = "transfer-status success";
+});
+
+document.querySelector("#applyImportData").addEventListener("click", () => {
+  try {
+    importPortableText(importData.value);
+    transferStatus.textContent = "匯入成功，所有設定已更新。";
+    transferStatus.className = "transfer-status success";
+  } catch (error) {
+    transferStatus.textContent = error instanceof Error ? error.message : "無法讀取這份資料。";
+    transferStatus.className = "transfer-status error";
+  }
+});
+
+importDataFile.addEventListener("change", async () => {
+  const [file] = importDataFile.files;
+  if (!file) return;
+  try {
+    const raw = await file.text();
+    importData.value = raw;
+    importPortableText(raw);
+    transferStatus.textContent = `已匯入 ${file.name}。`;
+    transferStatus.className = "transfer-status success";
+  } catch (error) {
+    transferStatus.textContent = error instanceof Error ? error.message : "無法讀取這份資料。";
+    transferStatus.className = "transfer-status error";
+  } finally {
+    importDataFile.value = "";
+  }
 });
 
 renderRewardList();
