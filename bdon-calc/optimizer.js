@@ -2,16 +2,7 @@ const STORAGE_KEY = window.BdonProfiles?.stateKey() ?? "bdon-calc-teams-v1";
 const OPTIMIZER_KEY = window.BdonProfiles?.optimizerKey() ?? "bdon-calc-optimizer-v1";
 const MAX_TARGET = 2_147_483_647;
 const SOLVE_TIMEOUT = 20_000;
-const RANK_ORDER = ["SS", "S", "A", "B", "C", "D"];
-const NORMAL_RATES = {
-  SS: { quarterPt: 400, cp: 10 }, S: { quarterPt: 300, cp: 8 },
-  A: { quarterPt: 200, cp: 6 }, B: { quarterPt: 140, cp: 5 },
-  C: { quarterPt: 100, cp: 4 }, D: { quarterPt: 60, cp: 3 },
-};
-const EVENT_RATES = {
-  SS: { quarterPt: 100 }, S: { quarterPt: 78 }, A: { quarterPt: 65 },
-  B: { quarterPt: 51 }, C: { quarterPt: 40 },
-};
+const optimizerCore = window.BdonOptimizerCore;
 
 const format = (value) => new Intl.NumberFormat("zh-TW", { maximumFractionDigits: 0 }).format(value);
 const number = (value, fallback = 0) => {
@@ -105,64 +96,13 @@ function currentSignature() {
   });
 }
 
-function allowedRanks(maxRank, mode) {
-  const start = RANK_ORDER.indexOf(maxRank);
-  if (start < 0) return [];
-  return RANK_ORDER.slice(start).filter((rank) => mode === "normal" || rank !== "D");
-}
-
-function actionPoints(quarterPt, multiplier, bonus) {
-  return Math.floor(quarterPt * multiplier * (100 + bonus) / 400);
-}
-
 function generateActions(target) {
-  let order = 0;
-  const actions = [];
-  const maxFire = settings.maxFire;
-  sharedState.normalOptions.forEach((team, teamIndex) => {
-    const bonus = Math.min(500, Math.floor(number(team?.pt)));
-    allowedRanks(team?.rank, "normal").forEach((rank) => {
-      for (let fire = 0; fire <= maxFire; fire += 1) {
-        const multiplier = fire === 0 ? 1 : fire * 5;
-        const points = actionPoints(NORMAL_RATES[rank].quarterPt, multiplier, bonus);
-        if (points <= 0 || points > target) continue;
-        actions.push({
-          mode: "normal", teamIndex, teamName: team?.name || `一般隊伍 ${teamIndex + 1}`,
-          rank, bonus, fire, multiplier, points,
-          cpDelta: NORMAL_RATES[rank].cp * multiplier, order: order++,
-        });
-      }
-    });
+  return optimizerCore.generateActions({
+    target,
+    maxFire: settings.maxFire,
+    normalOptions: sharedState.normalOptions,
+    eventOptions: sharedState.eventOptions,
   });
-
-  [200, 400, 800, 1600].forEach((cpCost) => {
-    sharedState.eventOptions.forEach((team, teamIndex) => {
-      const bonus = Math.min(500, Math.floor(number(team?.pt)));
-      allowedRanks(team?.rank, "event").forEach((rank) => {
-        const points = actionPoints(EVENT_RATES[rank].quarterPt, cpCost, bonus);
-        if (points <= 0 || points > target) return;
-        actions.push({
-          mode: "event", teamIndex, teamName: team?.name || `活動隊伍 ${teamIndex + 1}`,
-          rank, bonus, fire: 0, multiplier: cpCost, cpCost, points,
-          cpDelta: -cpCost, order: order++,
-        });
-      });
-    });
-  });
-
-  const unique = new Map();
-  actions.forEach((action) => {
-    const key = `${action.mode}:${action.points}:${action.cpDelta}:${action.fire}`;
-    if (!unique.has(key)) unique.set(key, action);
-  });
-  return [...unique.values()];
-}
-
-function gcd(left, right) {
-  let a = Math.abs(left);
-  let b = Math.abs(right);
-  while (b) [a, b] = [b, a % b];
-  return a;
 }
 
 function setResultState(kind, status, title, copy) {
@@ -249,7 +189,7 @@ function beginCalculation() {
     renderFailure("infeasible", "沒有可用打法", "無法建立搜尋範圍", "請確認至少有一隊能取得不超過尚缺 pt 的分數。");
     return;
   }
-  const divisor = actions.reduce((value, action) => gcd(value, action.points), 0);
+  const divisor = actions.reduce((value, action) => optimizerCore.gcd(value, action.points), 0);
   if (divisor && target % divisor !== 0) {
     renderFailure("infeasible", "已證明無精確解", "無法恰好達成", `所有單場得分的最大公因數為 ${format(divisor)}，無法組成 ${format(target)} pt。`);
     return;
