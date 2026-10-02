@@ -96,8 +96,8 @@ function sanitizeOptions(options, mode) {
       ? option.name.trim()
       : `${mode === "normal" ? "一般隊伍" : "活動隊伍"} ${index + 1}`,
     rank: availableRanks[mode].includes(option?.rank) ? option.rank : (mode === "event" ? "C" : "A"),
-    pt: Math.max(0, Number.parseFloat(option?.pt) || 0),
-    item: Math.max(0, Number.parseFloat(option?.item) || 0),
+    pt: Math.min(500, Math.max(0, Math.floor(Number.parseFloat(option?.pt) || 0))),
+    item: Math.min(500, Math.max(0, Math.floor(Number.parseFloat(option?.item) || 0))),
   }));
 }
 
@@ -138,6 +138,7 @@ function loadState() {
       targetItem: Number.isFinite(Number.parseFloat(saved?.targetItem)) ? Math.max(0, Number.parseFloat(saved.targetItem)) : 1000,
       ownedPt: Math.max(0, Number.parseFloat(saved?.ownedPt) || 0),
       ownedItem: Math.max(0, Number.parseFloat(saved?.ownedItem) || 0),
+      ownedCp: Math.max(0, Math.floor(Number.parseFloat(saved?.ownedCp) || 0)),
       shopSelections: sanitizeShopSelections(saved),
     };
   } catch {
@@ -150,6 +151,7 @@ function loadState() {
       targetItem: 1000,
       ownedPt: 0,
       ownedItem: 0,
+      ownedCp: 0,
       shopSelections: sanitizeShopSelections(null),
     };
   }
@@ -164,6 +166,7 @@ const targetPt = document.querySelector("#targetPt");
 const targetItem = document.querySelector("#targetItem");
 const ownedPt = document.querySelector("#ownedPt");
 const ownedItem = document.querySelector("#ownedItem");
+const ownedCp = document.querySelector("#ownedCp");
 const rewardList = document.querySelector("#rewardList");
 const rewardTargetSummary = document.querySelector("#rewardTargetSummary");
 const shopGrid = document.querySelector("#shopGrid");
@@ -199,6 +202,7 @@ function persistState() {
       targetItem: safeNumber(targetItem.value),
       ownedPt: safeNumber(ownedPt.value),
       ownedItem: safeNumber(ownedItem.value),
+      ownedCp: Math.floor(safeNumber(ownedCp.value)),
       shopSelections: state.shopSelections,
       shopQuantityDefaultsVersion: 2,
     }));
@@ -208,6 +212,13 @@ function persistState() {
 }
 
 function portableState() {
+  let optimizerSettings = { maxFire: 5 };
+  try {
+    const saved = JSON.parse(localStorage.getItem("bdon-calc-optimizer-v1"));
+    if ([3, 4, 5].includes(Number(saved?.maxFire))) optimizerSettings.maxFire = Number(saved.maxFire);
+  } catch {
+    // Keep the default optimizer setting when its storage is unavailable.
+  }
   return {
     format: "bdon-calc",
     version: 1,
@@ -218,8 +229,10 @@ function portableState() {
       targetItem: safeNumber(targetItem.value),
       ownedPt: safeNumber(ownedPt.value),
       ownedItem: safeNumber(ownedItem.value),
+      ownedCp: Math.floor(safeNumber(ownedCp.value)),
       shopSelections: state.shopSelections,
       shopQuantityDefaultsVersion: 2,
+      optimizerSettings,
     },
   };
 }
@@ -263,11 +276,19 @@ function applyPortableState(payload) {
     shopSelections: imported.shopSelections,
     shopQuantityDefaultsVersion: 2,
   });
+  if ([3, 4, 5].includes(Number(imported.optimizerSettings?.maxFire))) {
+    try {
+      localStorage.setItem("bdon-calc-optimizer-v1", JSON.stringify({ maxFire: Number(imported.optimizerSettings.maxFire) }));
+    } catch {
+      // Import the calculator data even if local browser storage is unavailable.
+    }
+  }
 
   targetPt.value = transferNumber(imported.targetPt, 1000);
   targetItem.value = transferNumber(imported.targetItem, 1000);
   ownedPt.value = transferNumber(imported.ownedPt);
   ownedItem.value = transferNumber(imported.ownedItem);
+  ownedCp.value = Math.floor(transferNumber(imported.ownedCp));
   renderOptions();
   renderRewardList();
   renderShopGrid();
@@ -336,11 +357,11 @@ function optionMarkup(option, mode, index) {
     <div class="option-bonuses">
       <label>
         <span>pt 加成</span>
-        <span class="number-input"><input type="number" min="0" step="1" value="${option.pt}" inputmode="decimal" data-option-field="pt" aria-label="${label}選項 ${index + 1} pt 加成" /><b>%</b></span>
+        <span class="number-input"><input type="number" min="0" max="500" step="1" value="${option.pt}" inputmode="numeric" data-option-field="pt" aria-label="${label}選項 ${index + 1} pt 加成" /><b>%</b></span>
       </label>
       <label>
         <span>獎章加成</span>
-        <span class="number-input"><input type="number" min="0" step="1" value="${option.item}" inputmode="decimal" data-option-field="item" aria-label="${label}選項 ${index + 1} 獎章加成" /><b>%</b></span>
+        <span class="number-input"><input type="number" min="0" max="500" step="1" value="${option.item}" inputmode="numeric" data-option-field="item" aria-label="${label}選項 ${index + 1} 獎章加成" /><b>%</b></span>
       </label>
     </div>
   </article>`;
@@ -568,7 +589,10 @@ function handleOptionInput(event) {
   if (!input || !card) return;
   const list = state[`${card.dataset.optionType}Options`];
   const option = list.find((item) => item.id === Number(card.dataset.optionId));
-  option[input.dataset.optionField] = safeNumber(input.value);
+  option[input.dataset.optionField] = Math.min(500, Math.floor(safeNumber(input.value)));
+  if (safeNumber(input.value) > 500 || !Number.isInteger(Number.parseFloat(input.value))) {
+    input.value = option[input.dataset.optionField];
+  }
   persistState();
   calculate();
 }
@@ -700,8 +724,9 @@ targetPt.value = state.targetPt;
 targetItem.value = state.targetItem;
 ownedPt.value = state.ownedPt;
 ownedItem.value = state.ownedItem;
+ownedCp.value = state.ownedCp;
 
-[targetPt, targetItem, ownedPt, ownedItem].forEach((field) => field.addEventListener("input", () => {
+[targetPt, targetItem, ownedPt, ownedItem, ownedCp].forEach((field) => field.addEventListener("input", () => {
   if (field === targetItem) {
     Object.values(state.shopSelections).forEach((selection) => { selection.checked = false; });
     renderShopGrid();

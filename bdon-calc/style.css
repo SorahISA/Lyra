@@ -27,11 +27,12 @@ body {
 }
 
 button, input, select { font: inherit; }
+a { color: inherit; }
 
 .app-shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 44px 0 64px; }
 .topbar { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 26px; }
 .topbar-actions { display: flex; align-items: center; gap: 9px; }
-.data-transfer-button { padding: 10px 14px; border: 1px solid #36516c; border-radius: 999px; background: #0d1c2d; color: #c7d7e9; cursor: pointer; font-size: .78rem; font-weight: 800; }
+.data-transfer-button { padding: 10px 14px; border: 1px solid #36516c; border-radius: 999px; background: #0d1c2d; color: #c7d7e9; cursor: pointer; font-size: .78rem; font-weight: 800; text-decoration: none; }
 .data-transfer-button:hover { border-color: var(--cyan); color: var(--cyan); }
 .data-transfer-button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
 .eyebrow { margin: 0 0 6px; color: var(--cyan); font-size: .76rem; font-weight: 800; letter-spacing: .18em; }
@@ -133,6 +134,7 @@ h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.65rem); line-height: 1; letter-spa
 .input-section + .input-section { margin-top: 20px; }
 .input-section h3 { margin: 0 0 10px; color: #bfd0e4; font-size: .82rem; letter-spacing: .04em; }
 .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.input-grid.owned-grid { grid-template-columns: repeat(3, 1fr); }
 label { min-width: 0; }
 label > span:first-child { display: block; margin: 0 0 7px; color: var(--muted); font-size: .78rem; }
 .number-input { display: flex; align-items: center; height: 48px; border: 1px solid var(--line); border-radius: 11px; background: #081423; overflow: hidden; transition: border-color .18s; }
@@ -291,7 +293,7 @@ label > span:first-child { display: block; margin: 0 0 7px; color: var(--muted);
   .status-chip { padding: 8px 10px; font-size: .75rem; }
   .control-panel, .result-panel { padding: 22px 18px; }
   .rate-reference { padding: 22px 18px; }
-  .mode-grid, .input-grid { grid-template-columns: 1fr; }
+  .mode-grid, .input-grid, .input-grid.owned-grid { grid-template-columns: 1fr; }
   .shop-selection { grid-template-columns: 1fr; }
   .shop-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .reward-row { grid-template-columns: 46px minmax(0, 1fr) 78px; }
