@@ -13,7 +13,7 @@ const rates = {
     A: { pt: 16.25, item: 18.75 },
     B: { pt: 12.75, item: 17 },
     C: { pt: 10, item: 13.25 },
-    D: { pt: 7.5, item: 7.25, approximate: true },
+    D: { pt: 7.5, item: 7.25 },
   },
 };
 
@@ -91,6 +91,12 @@ const defaultOptions = {
   event: [{ id: 1, name: "活動隊伍 1", rank: "A", pt: 0, item: 0 }],
 };
 
+function normalizeBonus(value) {
+  const parsed = Number.parseFloat(value);
+  if (!Number.isFinite(parsed)) return 0;
+  return Math.min(500, Math.max(0, Math.round(parsed * 2) / 2));
+}
+
 function sanitizeOptions(options, mode) {
   if (!Array.isArray(options)) return defaultOptions[mode];
   return options.map((option, index) => ({
@@ -99,8 +105,8 @@ function sanitizeOptions(options, mode) {
       ? option.name.trim()
       : `${mode === "normal" ? "一般隊伍" : "活動隊伍"} ${index + 1}`,
     rank: availableRanks[mode].includes(option?.rank) ? option.rank : (mode === "event" ? "C" : "A"),
-    pt: Math.min(500, Math.max(0, Math.floor(Number.parseFloat(option?.pt) || 0))),
-    item: Math.min(500, Math.max(0, Math.floor(Number.parseFloat(option?.item) || 0))),
+    pt: normalizeBonus(option?.pt),
+    item: normalizeBonus(option?.item),
   }));
 }
 
@@ -387,7 +393,7 @@ function optionMarkup(option, mode, index) {
     ? [[rate.pt, "pt"], [rate.item, "獎章"], [rate.cp, "cp"]]
     : [[rate.pt, "pt"], [rate.item, "獎章"]];
   const summaryMarkup = summary.map(([value, unit]) =>
-    `<span>${rateNumberMarkup(value, !isNormal)}<i>${unit}${rate.approximate && unit === "獎章" ? '<small class="approx-inline">不準確</small>' : ""}</i></span>`
+    `<span>${rateNumberMarkup(value, !isNormal)}<i>${unit}</i></span>`
   ).join("");
   const rateMarkup = `<span class="normal-rate-preview">
     ${isNormal ? normalRatePreviewContent(option, rate) : eventRatePreviewContent(option, rate)}
@@ -409,11 +415,11 @@ function optionMarkup(option, mode, index) {
     <div class="option-bonuses">
       <label>
         <span>pt 加成</span>
-        <span class="number-input"><input type="number" min="0" max="500" step="1" value="${option.pt}" inputmode="numeric" data-option-field="pt" aria-label="${label}選項 ${index + 1} pt 加成" /><b>%</b></span>
+        <span class="number-input"><input type="number" min="0" max="500" step="1" value="${option.pt}" inputmode="decimal" data-option-field="pt" aria-label="${label}選項 ${index + 1} pt 加成" /><b>%</b></span>
       </label>
       <label>
         <span>獎章加成</span>
-        <span class="number-input"><input type="number" min="0" max="500" step="1" value="${option.item}" inputmode="numeric" data-option-field="item" aria-label="${label}選項 ${index + 1} 獎章加成" /><b>%</b></span>
+        <span class="number-input"><input type="number" min="0" max="500" step="1" value="${option.item}" inputmode="decimal" data-option-field="item" aria-label="${label}選項 ${index + 1} 獎章加成" /><b>%</b></span>
       </label>
     </div>
   </article>`;
@@ -643,8 +649,9 @@ function handleOptionInput(event) {
   if (!input || !card) return;
   const list = state[`${card.dataset.optionType}Options`];
   const option = list.find((item) => item.id === Number(card.dataset.optionId));
-  option[input.dataset.optionField] = Math.min(500, Math.floor(safeNumber(input.value)));
-  if (safeNumber(input.value) > 500 || !Number.isInteger(Number.parseFloat(input.value))) {
+  option[input.dataset.optionField] = normalizeBonus(input.value);
+  const rawBonus = Number.parseFloat(input.value);
+  if (!Number.isFinite(rawBonus) || rawBonus < 0 || rawBonus > 500 || !Number.isInteger(rawBonus * 2)) {
     input.value = option[input.dataset.optionField];
   }
   const mode = card.dataset.optionType;
