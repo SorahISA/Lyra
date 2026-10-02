@@ -223,10 +223,10 @@ function optionMarkup(option, mode, index) {
   const label = isNormal ? "一般" : "活動";
   const rate = rates[mode][option.rank];
   const summary = isNormal
-    ? [[rate.pt, "pt"], [rate.item, "道具"], [rate.cp, "cp"]]
-    : [[rate.pt, "pt"], [rate.item, "道具"]];
+    ? [[rate.pt, "pt"], [rate.item, "獎章"], [rate.cp, "cp"]]
+    : [[rate.pt, "pt"], [rate.item, "獎章"]];
   const summaryMarkup = summary.map(([value, unit]) =>
-    `<span>${rateNumberMarkup(value, !isNormal)}<i>${unit}${rate.approximate && unit === "道具" ? '<small class="approx-inline">不準確</small>' : ""}</i></span>`
+    `<span>${rateNumberMarkup(value, !isNormal)}<i>${unit}${rate.approximate && unit === "獎章" ? '<small class="approx-inline">不準確</small>' : ""}</i></span>`
   ).join("");
   return `<article class="option-card" data-option-type="${mode}" data-option-id="${option.id}">
     <div class="option-main">
@@ -253,8 +253,8 @@ function optionMarkup(option, mode, index) {
         <span class="number-input"><input type="number" min="0" step="1" value="${option.pt}" inputmode="decimal" data-option-field="pt" aria-label="${label}選項 ${index + 1} pt 加成" /><b>%</b></span>
       </label>
       <label>
-        <span>道具加成</span>
-        <span class="number-input"><input type="number" min="0" step="1" value="${option.item}" inputmode="decimal" data-option-field="item" aria-label="${label}選項 ${index + 1} 道具加成" /><b>%</b></span>
+        <span>獎章加成</span>
+        <span class="number-input"><input type="number" min="0" step="1" value="${option.item}" inputmode="decimal" data-option-field="item" aria-label="${label}選項 ${index + 1} 獎章加成" /><b>%</b></span>
       </label>
     </div>
   </article>`;
@@ -325,14 +325,14 @@ function renderShopGrid() {
   shopGrid.innerHTML = shopItems.map((item) => {
     const selection = state.shopSelections[item.id];
     return `<article class="shop-card${selection.checked ? " selected" : ""}" data-shop-item="${item.id}">
-      <label class="shop-check" title="計入目標道具">
+      <label class="shop-check" title="計入目標獎章">
         <input type="checkbox" data-shop-check ${selection.checked ? "checked" : ""} />
         <span aria-hidden="true">✓</span>
       </label>
       <img src="${item.icon}" alt="" loading="lazy" />
       <h4>${escapeHtml(item.name)}</h4>
       <p>每次 ${format(item.quantity, 0)} 個</p>
-      <strong>${format(item.price, 0)} 道具</strong>
+      <strong>${format(item.price, 0)} 獎章</strong>
       <small>${item.limit === null ? "無兌換限制" : `最多 ${item.limit} 次`}</small>
       <label class="shop-quantity">
         <span>兌換</span>
@@ -354,7 +354,7 @@ function updateShopTarget() {
   });
   targetItem.value = total;
   shopTargetSummary.textContent = selectedCount
-    ? `${selectedCount} 項 · ${format(total, 0)} 道具`
+    ? `${selectedCount} 項 · ${format(total, 0)} 獎章`
     : "尚未選擇";
   persistState();
   calculate();
@@ -410,7 +410,7 @@ function updateWinnerHighlights(bestPt, bestItem) {
     card.classList.toggle("best-both", isPt && isItem);
     card.querySelector(".winner-marks").innerHTML = [
       isPt ? '<span class="winner-mark">pt 最佳</span>' : "",
-      isItem ? '<span class="winner-mark item">道具最佳</span>' : "",
+      isItem ? '<span class="winner-mark item">獎章最佳</span>' : "",
     ].join("");
   });
 }
@@ -441,7 +441,7 @@ function calculate() {
   const bestItem = results.reduce((best, item) => item.itemFire < best.itemFire ? item : best);
 
   renderBest("pt", bestPt, "pt");
-  renderBest("item", bestItem, "道具");
+  renderBest("item", bestItem, "獎章");
   updateWinnerHighlights(bestPt, bestItem);
   document.querySelector("#combinationCount").textContent = `${results.length} 種組合`;
 
@@ -449,11 +449,11 @@ function calculate() {
     <div class="comparison-name">
       ${escapeHtml(result.normalOption.name)} × ${escapeHtml(result.eventOption.name)}
       ${result === bestPt ? '<span class="best-badge">pt 最佳</span>' : ""}
-      ${result === bestItem ? '<span class="best-badge item">道具最佳</span>' : ""}
+      ${result === bestItem ? '<span class="best-badge item">獎章最佳</span>' : ""}
       <span class="comparison-ranks">${result.normalOption.rank} 級 × ${result.eventOption.rank} 級</span>
     </div>
     <div class="comparison-value"><span>尚缺 pt</span><b>${format(result.ptFire)} 火</b></div>
-    <div class="comparison-value"><span>尚缺道具</span><b>${format(result.itemFire)} 火</b></div>
+    <div class="comparison-value"><span>尚缺獎章</span><b>${format(result.itemFire)} 火</b></div>
   </div>`).join("");
 }
 

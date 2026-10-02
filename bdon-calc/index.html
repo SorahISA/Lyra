@@ -62,7 +62,7 @@
             <span class="step-number">02</span>
             <div>
               <h2>輸入目標</h2>
-              <p>結果會分別找出 pt 與道具最省火的方案。</p>
+              <p>結果會分別找出 pt 與獎章最省火的方案。</p>
             </div>
           </div>
 
@@ -74,7 +74,7 @@
                 <span class="number-input"><input id="targetPt" type="number" min="0" step="1" value="1000" inputmode="decimal" /><b>pt</b></span>
               </label>
               <label>
-                <span>目標道具</span>
+                <span>目標獎章</span>
                 <span class="number-input"><input id="targetItem" type="number" min="0" step="1" value="1000" inputmode="decimal" /><b>個</b></span>
               </label>
             </div>
@@ -88,7 +88,7 @@
                 <span class="number-input"><input id="ownedPt" type="number" min="0" step="1" value="0" inputmode="decimal" /><b>pt</b></span>
               </label>
               <label>
-                <span>已有道具</span>
+                <span>已有獎章</span>
                 <span class="number-input"><input id="ownedItem" type="number" min="0" step="1" value="0" inputmode="decimal" /><b>個</b></span>
               </label>
             </div>
@@ -145,14 +145,14 @@
             <div class="result-label"><span>ITEM GOAL</span><b id="itemWinner">一般 1 × 活動 1</b></div>
             <div class="result-value"><strong id="itemResult">0.00</strong><span>火</span></div>
             <p id="itemRounded">至少需要 0 火</p>
-            <div class="rate-row"><span>每火可得</span><b id="itemPerFire">0 道具</b></div>
+            <div class="rate-row"><span>每火可得</span><b id="itemPerFire">0 獎章</b></div>
           </div>
 
           <details class="formula-card">
             <summary>查看計算方式</summary>
             <div class="formula-content">
               <p><b>pt</b> = max（目標 pt－已有 pt，0）÷［5 ×（一般 pt ×（1＋一般 pt 加成）＋一般 cp × 活動 pt ×（1＋活動 pt 加成））］</p>
-              <p><b>道具</b> = max（目標道具－已有道具，0）÷［5 ×（一般道具 ×（1＋一般道具加成）＋一般 cp × 活動道具 ×（1＋活動道具加成））］</p>
+              <p><b>獎章</b> = max（目標獎章－已有獎章，0）÷［5 ×（一般獎章 ×（1＋一般獎章加成）＋一般 cp × 活動獎章 ×（1＋活動獎章加成））］</p>
             </div>
           </details>
         </aside>
@@ -171,7 +171,7 @@
             </div>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>評級</th><th>pt</th><th>道具</th><th>cp</th></tr></thead>
+                <thead><tr><th>評級</th><th>pt</th><th>獎章</th><th>cp</th></tr></thead>
                 <tbody>
                   <tr><th>SS</th><td>100</td><td>120</td><td>10</td></tr>
                   <tr><th>S</th><td>75</td><td>90</td><td>8</td></tr>
@@ -191,7 +191,7 @@
             </div>
             <div class="table-wrap">
               <table>
-                <thead><tr><th>評級</th><th>pt</th><th>道具</th></tr></thead>
+                <thead><tr><th>評級</th><th>pt</th><th>獎章</th></tr></thead>
                 <tbody>
                   <tr><th>SS</th><td>25</td><td>24.75</td></tr>
                   <tr><th>S</th><td>19.5</td><td>22.25</td></tr>
