@@ -1,5 +1,5 @@
-const STORAGE_KEY = "bdon-calc-teams-v1";
-const OPTIMIZER_KEY = "bdon-calc-optimizer-v1";
+const STORAGE_KEY = window.BdonProfiles?.stateKey() ?? "bdon-calc-teams-v1";
+const OPTIMIZER_KEY = window.BdonProfiles?.optimizerKey() ?? "bdon-calc-optimizer-v1";
 const MAX_TARGET = 2_147_483_647;
 const SOLVE_TIMEOUT = 20_000;
 const RANK_ORDER = ["SS", "S", "A", "B", "C", "D"];
