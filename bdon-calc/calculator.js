@@ -13,29 +13,52 @@ const rates = {
     A: { pt: 16.25, item: 18.75 },
     B: { pt: 12.75, item: 17 },
     C: { pt: 10, item: 13.25 },
-    D: { pt: 1, item: 1 },
+    D: { pt: 7.5, item: 7.25, approximate: true },
   },
 };
 
 const availableRanks = {
   normal: ["SS", "S", "A", "B", "C", "D"],
-  event: ["SS", "S", "A", "B", "C"],
+  event: ["SS", "S", "A", "B", "C", "D"],
 };
 
-const pointRewardTargets = [
-  500, 1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000,
-  10000, 12000, 14000, 15000, 16000, 18000, 20000, 22000, 24000, 27000,
-  30000, 35000, 40000, 45000, 50000, 55000, 60000, 65000, 70000, 75000,
-  80000, 85000, 90000, 95000, 100000, 105000, 110000, 115000, 120000, 125000,
-  130000, 135000, 140000, 145000, 150000, 155000, 160000, 165000, 170000, 175000,
-  180000, 185000, 190000, 200000, 210000, 220000, 230000, 240000, 250000, 260000,
-  270000, 280000, 300000, 330000, 375000, 450000, 525000, 600000, 675000, 750000,
-  825000, 900000, 1000000, 1250000, 1500000, 2000000, 2500000, 3000000,
-];
+const rewardIcons = {
+  "星鑽": "https://assets.bdon.moe/zh-Hant/Item/common/item_icon_star/item_icon_star.webp",
+  "硬幣": "https://assets.bdon.moe/zh-Hant/Item/common/item_icon_coin/item_icon_coin.webp",
+  "快照EXP": "https://assets.bdon.moe/zh-Hant/Item/exp/item_icon_exp_005/item_icon_exp_005.webp",
+  "團員EXP": "https://assets.bdon.moe/zh-Hant/Item/exp/item_icon_exp_004/item_icon_exp_004.webp",
+  "夢限大MewType 稜晶": "https://assets.bdon.moe/zh-Hant/Item/prism/item_icon_prism_003/item_icon_prism_003.webp",
+  "演出技能強化券": "https://assets.bdon.moe/zh-Hant/Item/ticket/item_icon_ticket_skill_001/item_icon_ticket_skill_001.webp",
+  "激奏技能強化券": "https://assets.bdon.moe/zh-Hant/Item/ticket/item_icon_ticket_skill_002/item_icon_ticket_skill_002.webp",
+  "技能強化券": "https://assets.bdon.moe/zh-Hant/Item/ticket/item_icon_ticket_skill_003/item_icon_ticket_skill_003.webp",
+  "SP技能強化券": "https://assets.bdon.moe/zh-Hant/Item/ticket/item_icon_ticket_skill_004/item_icon_ticket_skill_004.webp",
+  "愛的奔流 AtoZ 報酬貼圖": "https://assets.bdon.moe/zh-Hant/Stamp/illust/stamp_illust_yuno_003/stamp_illust_yuno_003.webp",
+  "奇蹟水晶": "https://assets.bdon.moe/zh-Hant/Item/crystal/item_icon_crystal_002/item_icon_crystal_002.webp",
+  "希望稜晶": "https://assets.bdon.moe/zh-Hant/Item/prism/item_icon_prism_006/item_icon_prism_006.webp",
+  "峰月律 · Night・Flight": "https://assets.bdon.moe/zh-Hans/MemberCard/63/member_thumbnail/member_thumbnail.webp",
+  "幸運水晶": "https://assets.bdon.moe/zh-Hant/Item/crystal/item_icon_crystal_001/item_icon_crystal_001.webp",
+  "活動獎章（紺碧）": "https://assets.bdon.moe/zh-Hant/Item/event/item_icon_event_badge_002/item_icon_event_badge_002.webp",
+};
 
-const itemAssetRoot = "https://assets.bdon.moe/en/en/Item";
+const pointRewards = [
+  [500,40,"星鑽"], [1000,15000,"硬幣"], [2000,15000,"快照EXP"], [3000,15000,"團員EXP"], [4000,5,"夢限大MewType 稜晶"], [5000,5,"演出技能強化券"],
+  [6000,5,"激奏技能強化券"], [7000,5,"技能強化券"], [8000,5,"夢限大MewType 稜晶"], [9000,40,"星鑽"], [10000,5,"夢限大MewType 稜晶"], [12000,15000,"硬幣"],
+  [14000,45000,"快照EXP"], [15000,45000,"團員EXP"], [16000,10,"夢限大MewType 稜晶"], [18000,5,"演出技能強化券"], [20000,5,"激奏技能強化券"], [22000,5,"技能強化券"],
+  [24000,5,"SP技能強化券"], [27000,40,"星鑽"], [30000,1,"愛的奔流 AtoZ 報酬貼圖"], [35000,5,"奇蹟水晶"], [40000,45000,"硬幣"], [45000,10,"夢限大MewType 稜晶"],
+  [50000,5,"奇蹟水晶"], [55000,25,"演出技能強化券"], [60000,25,"激奏技能強化券"], [65000,20,"技能強化券"], [70000,5,"奇蹟水晶"], [75000,40,"星鑽"],
+  [80000,5,"奇蹟水晶"], [85000,5,"希望稜晶"], [90000,25,"演出技能強化券"], [95000,10,"夢限大MewType 稜晶"], [100000,1,"峰月律 · Night・Flight"], [105000,10,"幸運水晶"],
+  [110000,10,"幸運水晶"], [115000,5,"奇蹟水晶"], [120000,25,"激奏技能強化券"], [125000,40,"星鑽"], [130000,5,"SP技能強化券"], [135000,10,"奇蹟水晶"],
+  [140000,10,"夢限大MewType 稜晶"], [145000,90000,"團員EXP"], [150000,1,"峰月律 · Night・Flight"], [155000,40,"星鑽"], [160000,10,"幸運水晶"], [165000,10,"幸運水晶"],
+  [170000,25,"演出技能強化券"], [175000,10,"奇蹟水晶"], [180000,10,"夢限大MewType 稜晶"], [185000,25,"激奏技能強化券"], [190000,10,"SP技能強化券"], [200000,1,"峰月律 · Night・Flight"],
+  [210000,90000,"硬幣"], [220000,40,"星鑽"], [230000,25,"夢限大MewType 稜晶"], [240000,10,"奇蹟水晶"], [250000,90000,"快照EXP"], [260000,5,"希望稜晶"],
+  [270000,55,"演出技能強化券"], [280000,90000,"硬幣"], [300000,1,"峰月律 · Night・Flight"], [330000,55,"激奏技能強化券"], [375000,15,"奇蹟水晶"], [450000,40,"星鑽"],
+  [525000,55,"夢限大MewType 稜晶"], [600000,20,"SP技能強化券"], [675000,1,"峰月律 · Night・Flight"], [750000,20,"希望稜晶"], [825000,20,"奇蹟水晶"], [900000,40,"星鑽"],
+  [1000000,100000,"活動獎章（紺碧）"], [1250000,100000,"活動獎章（紺碧）"], [1500000,100000,"活動獎章（紺碧）"], [2000000,100000,"活動獎章（紺碧）"], [2500000,100000,"活動獎章（紺碧）"], [3000000,100000,"活動獎章（紺碧）"],
+].map(([point, count, name]) => ({ point, count, name, icon: rewardIcons[name] }));
+
+const itemAssetRoot = "https://assets.bdon.moe/zh-Hant/Item";
 const shopItems = [
-  { id: "rest", name: "圓滾滾的休息時刻", quantity: 1, price: 100000, limit: 5 },
+  { id: "rest", name: "圓滾滾的休息時刻", quantity: 1, price: 100000, limit: 5, icon: "https://assets.bdon.moe/zh-Hans/SupportCard/64/snap_thumbnail/snap_thumbnail.webp" },
   { id: "gacha", name: "交織的樂章轉蛋券", quantity: 1, price: 100000, limit: 3, icon: `${itemAssetRoot}/ticket/item_icon_ticket_gacha_001/item_icon_ticket_gacha_001.webp` },
   { id: "coin-limited", name: "硬幣", quantity: 60000, price: 3500, limit: 20, icon: `${itemAssetRoot}/common/item_icon_coin/item_icon_coin.webp` },
   { id: "member-exp-limited", name: "團員 EXP", quantity: 30000, price: 1750, limit: 10, icon: `${itemAssetRoot}/exp/item_icon_exp_004/item_icon_exp_004.webp` },
@@ -78,6 +101,29 @@ function sanitizeOptions(options, mode) {
   }));
 }
 
+function sanitizeShopSelections(saved) {
+  const selections = {};
+  const useSavedCounts = saved?.shopQuantityDefaultsVersion === 2;
+  shopItems.forEach((item) => {
+    const selection = saved?.shopSelections?.[item.id];
+    const defaultCount = item.limit ?? 1;
+    let count = useSavedCounts
+      ? Math.max(1, Math.floor(Number.parseFloat(selection?.count) || defaultCount))
+      : defaultCount;
+    if (item.limit !== null) count = Math.min(count, item.limit);
+    selections[item.id] = { checked: Boolean(selection?.checked), count };
+  });
+
+  if (saved?.shopItemId && selections[saved.shopItemId] && !Object.values(selections).some((item) => item.checked)) {
+    const legacyItem = shopItems.find((item) => item.id === saved.shopItemId);
+    selections[saved.shopItemId] = {
+      checked: true,
+      count: legacyItem?.limit ?? Math.max(1, Math.floor(Number.parseFloat(saved.shopExchangeCount) || 1)),
+    };
+  }
+  return selections;
+}
+
 function loadState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
@@ -92,8 +138,7 @@ function loadState() {
       targetItem: Number.isFinite(Number.parseFloat(saved?.targetItem)) ? Math.max(0, Number.parseFloat(saved.targetItem)) : 1000,
       ownedPt: Math.max(0, Number.parseFloat(saved?.ownedPt) || 0),
       ownedItem: Math.max(0, Number.parseFloat(saved?.ownedItem) || 0),
-      shopItemId: shopItems.some((item) => item.id === saved?.shopItemId) ? saved.shopItemId : "",
-      shopExchangeCount: Math.max(1, Math.floor(Number.parseFloat(saved?.shopExchangeCount) || 1)),
+      shopSelections: sanitizeShopSelections(saved),
     };
   } catch {
     return {
@@ -105,8 +150,7 @@ function loadState() {
       targetItem: 1000,
       ownedPt: 0,
       ownedItem: 0,
-      shopItemId: "",
-      shopExchangeCount: 1,
+      shopSelections: sanitizeShopSelections(null),
     };
   }
 }
@@ -120,11 +164,10 @@ const targetPt = document.querySelector("#targetPt");
 const targetItem = document.querySelector("#targetItem");
 const ownedPt = document.querySelector("#ownedPt");
 const ownedItem = document.querySelector("#ownedItem");
-const targetPtReward = document.querySelector("#targetPtReward");
-const shopItemSelect = document.querySelector("#shopItemSelect");
-const shopSelection = document.querySelector("#shopSelection");
-const shopItemPreview = document.querySelector("#shopItemPreview");
-const shopExchangeCount = document.querySelector("#shopExchangeCount");
+const rewardList = document.querySelector("#rewardList");
+const rewardTargetSummary = document.querySelector("#rewardTargetSummary");
+const shopGrid = document.querySelector("#shopGrid");
+const shopTargetSummary = document.querySelector("#shopTargetSummary");
 
 const format = (value, digits = 2) =>
   new Intl.NumberFormat("zh-TW", {
@@ -151,8 +194,8 @@ function persistState() {
       targetItem: safeNumber(targetItem.value),
       ownedPt: safeNumber(ownedPt.value),
       ownedItem: safeNumber(ownedItem.value),
-      shopItemId: shopItemSelect.value,
-      shopExchangeCount: Math.max(1, Math.floor(safeNumber(shopExchangeCount.value) || 1)),
+      shopSelections: state.shopSelections,
+      shopQuantityDefaultsVersion: 2,
     }));
   } catch {
     // The calculator still works if local browser storage is unavailable.
@@ -183,7 +226,7 @@ function optionMarkup(option, mode, index) {
     ? [[rate.pt, "pt"], [rate.item, "道具"], [rate.cp, "cp"]]
     : [[rate.pt, "pt"], [rate.item, "道具"]];
   const summaryMarkup = summary.map(([value, unit]) =>
-    `<span>${rateNumberMarkup(value, !isNormal)}<i>${unit}</i></span>`
+    `<span>${rateNumberMarkup(value, !isNormal)}<i>${unit}${rate.approximate && unit === "道具" ? '<small class="approx-inline">不準確</small>' : ""}</i></span>`
   ).join("");
   return `<article class="option-card" data-option-type="${mode}" data-option-id="${option.id}">
     <div class="option-main">
@@ -248,26 +291,98 @@ function evaluateCombination(normalOption, eventOption, normalIndex, eventIndex)
   };
 }
 
-function applyShopTarget() {
-  const item = shopItems.find((candidate) => candidate.id === shopItemSelect.value);
-  shopSelection.hidden = !item;
-  if (!item) {
-    shopItemPreview.innerHTML = "";
-    return;
-  }
+function renderRewardList() {
+  const memberRewardPoints = new Set([30000, 100000, 150000, 200000, 300000, 675000]);
+  rewardList.innerHTML = pointRewards.map((reward) => `<button type="button" class="reward-row${memberRewardPoints.has(reward.point) ? " member-reward" : ""}" data-reward-point="${reward.point}" style="--reward-progress:0%" aria-pressed="false">
+    <span class="reward-progress" aria-hidden="true"></span>
+    <img src="${reward.icon}" alt="" loading="lazy" />
+    <span class="reward-copy"><b>${escapeHtml(reward.name)}</b><small>${format(reward.count, 0)} 個</small></span>
+    <span class="reward-point"><b>${format(reward.point, 0)}</b><small>pt · 0%</small></span>
+    <span class="reward-stamp" hidden>已獲得</span>
+  </button>`).join("");
+  updateRewardProgress();
+}
 
-  const requestedCount = Math.max(1, Math.floor(safeNumber(shopExchangeCount.value) || 1));
-  const count = item.limit === null ? requestedCount : Math.min(requestedCount, item.limit);
-  shopExchangeCount.value = count;
-  shopExchangeCount.max = item.limit ?? "";
-  targetItem.value = item.price * count;
-  const totalReward = item.quantity * count;
-  shopItemPreview.innerHTML = `${item.icon
-    ? `<img src="${item.icon}" alt="" loading="lazy" />`
-    : '<span class="shop-item-fallback" aria-hidden="true">休</span>'}
-    <span><b>${escapeHtml(item.name)}</b><small>每次 ${format(item.quantity, 0)} 個 · ${format(item.price, 0)} 道具${item.limit === null ? " · 無兌換限制" : ` · 最多 ${item.limit} 次`}</small><em>共 ${format(totalReward, 0)} 個，需 ${format(item.price * count, 0)} 道具</em></span>`;
+function updateRewardProgress() {
+  const target = safeNumber(targetPt.value);
+  const owned = safeNumber(ownedPt.value);
+  rewardTargetSummary.textContent = `目前目標 ${format(target, 0)} pt`;
+  pointRewards.forEach((reward) => {
+    const progress = Math.min(target / reward.point * 100, 100);
+    const obtained = owned >= reward.point;
+    const selected = target === reward.point;
+    const row = rewardList.querySelector(`[data-reward-point="${reward.point}"]`);
+    row.style.setProperty("--reward-progress", `${progress}%`);
+    row.classList.toggle("selected", selected);
+    row.classList.toggle("obtained", obtained);
+    row.setAttribute("aria-pressed", String(selected));
+    row.querySelector(".reward-point small").textContent = `pt · ${format(progress, 0)}%`;
+    row.querySelector(".reward-stamp").hidden = !obtained;
+  });
+}
+
+function renderShopGrid() {
+  shopGrid.innerHTML = shopItems.map((item) => {
+    const selection = state.shopSelections[item.id];
+    return `<article class="shop-card${selection.checked ? " selected" : ""}" data-shop-item="${item.id}">
+      <label class="shop-check" title="計入目標道具">
+        <input type="checkbox" data-shop-check ${selection.checked ? "checked" : ""} />
+        <span aria-hidden="true">✓</span>
+      </label>
+      <img src="${item.icon}" alt="" loading="lazy" />
+      <h4>${escapeHtml(item.name)}</h4>
+      <p>每次 ${format(item.quantity, 0)} 個</p>
+      <strong>${format(item.price, 0)} 道具</strong>
+      <small>${item.limit === null ? "無兌換限制" : `最多 ${item.limit} 次`}</small>
+      <label class="shop-quantity">
+        <span>兌換</span>
+        <input type="number" min="1" ${item.limit === null ? "" : `max="${item.limit}"`} step="1" value="${selection.count}" inputmode="numeric" data-shop-count aria-label="${escapeHtml(item.name)}兌換次數" />
+        <span>次</span>
+      </label>
+    </article>`;
+  }).join("");
+}
+
+function updateShopTarget() {
+  let total = 0;
+  let selectedCount = 0;
+  shopItems.forEach((item) => {
+    const selection = state.shopSelections[item.id];
+    if (!selection.checked) return;
+    selectedCount += 1;
+    total += item.price * selection.count;
+  });
+  targetItem.value = total;
+  shopTargetSummary.textContent = selectedCount
+    ? `${selectedCount} 項 · ${format(total, 0)} 道具`
+    : "尚未選擇";
   persistState();
   calculate();
+}
+
+function setupAnimatedDetails(details) {
+  const summary = details.querySelector("summary");
+  let animation = null;
+  summary.addEventListener("click", (event) => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    event.preventDefault();
+    const opening = !details.open;
+    const startHeight = details.offsetHeight;
+    animation?.cancel();
+    if (opening) details.open = true;
+    const endHeight = opening ? details.scrollHeight : summary.offsetHeight;
+    details.style.overflow = "hidden";
+    animation = details.animate(
+      { height: [`${startHeight}px`, `${endHeight}px`] },
+      { duration: 280, easing: "cubic-bezier(.2,.75,.25,1)" },
+    );
+    animation.onfinish = () => {
+      details.open = opening;
+      details.style.removeProperty("height");
+      details.style.removeProperty("overflow");
+      animation = null;
+    };
+  });
 }
 
 function renderBest(kind, result, unit) {
@@ -495,46 +610,77 @@ document.querySelector("#addEvent").addEventListener("click", () => addOption("e
   });
   list.addEventListener("drop", handleDrop);
 });
-targetPtReward.insertAdjacentHTML("beforeend", pointRewardTargets.map((value) =>
-  `<option value="${value}">${new Intl.NumberFormat("zh-TW").format(value)} pt 獎勵</option>`
-).join(""));
-shopItemSelect.insertAdjacentHTML("beforeend", shopItems.map((item) =>
-  `<option value="${item.id}">${escapeHtml(item.name)}｜${format(item.quantity, 0)} 個／${format(item.price, 0)} 道具${item.limit === null ? "｜無限制" : `｜最多 ${item.limit} 次`}</option>`
-).join(""));
-
 targetPt.value = state.targetPt;
 targetItem.value = state.targetItem;
 ownedPt.value = state.ownedPt;
 ownedItem.value = state.ownedItem;
-targetPtReward.value = pointRewardTargets.includes(state.targetPt) ? String(state.targetPt) : "";
-shopItemSelect.value = state.shopItemId;
-shopExchangeCount.value = state.shopExchangeCount;
 
 [targetPt, targetItem, ownedPt, ownedItem].forEach((field) => field.addEventListener("input", () => {
-  if (field === targetPt) {
-    targetPtReward.value = pointRewardTargets.includes(safeNumber(targetPt.value)) ? targetPt.value : "";
-  }
   if (field === targetItem) {
-    shopItemSelect.value = "";
-    shopSelection.hidden = true;
-    shopItemPreview.innerHTML = "";
+    Object.values(state.shopSelections).forEach((selection) => { selection.checked = false; });
+    renderShopGrid();
+    shopTargetSummary.textContent = "手動輸入";
   }
+  if (field === targetPt || field === ownedPt) updateRewardProgress();
   persistState();
   calculate();
 }));
-targetPtReward.addEventListener("change", () => {
-  if (!targetPtReward.value) return;
-  targetPt.value = targetPtReward.value;
+
+rewardList.addEventListener("click", (event) => {
+  const row = event.target.closest("[data-reward-point]");
+  if (!row) return;
+  targetPt.value = row.dataset.rewardPoint;
+  updateRewardProgress();
   persistState();
   calculate();
 });
-shopItemSelect.addEventListener("change", () => {
-  shopExchangeCount.value = 1;
-  applyShopTarget();
-});
-shopExchangeCount.addEventListener("input", applyShopTarget);
 
-if (shopItemSelect.value) applyShopTarget();
+shopGrid.addEventListener("input", (event) => {
+  const card = event.target.closest("[data-shop-item]");
+  if (!card) return;
+  const item = shopItems.find((candidate) => candidate.id === card.dataset.shopItem);
+  const selection = state.shopSelections[item.id];
+  if (event.target.matches("[data-shop-check]")) {
+    selection.checked = event.target.checked;
+    card.classList.toggle("selected", selection.checked);
+  }
+  if (event.target.matches("[data-shop-count]")) {
+    let count = Math.max(1, Math.floor(safeNumber(event.target.value) || 1));
+    if (item.limit !== null) count = Math.min(count, item.limit);
+    selection.count = count;
+    event.target.value = count;
+  }
+  updateShopTarget();
+});
+
+shopGrid.addEventListener("click", (event) => {
+  if (event.target.closest(".shop-check, .shop-quantity")) return;
+  const card = event.target.closest("[data-shop-item]");
+  if (!card) return;
+  card.querySelector("[data-shop-check]").click();
+});
+
+document.querySelector(".shop-bulk-actions").addEventListener("click", (event) => {
+  const button = event.target.closest("[data-shop-action]");
+  if (!button) return;
+  const action = button.dataset.shopAction;
+  shopItems.forEach((item) => {
+    const selection = state.shopSelections[item.id];
+    if (action === "select-all") selection.checked = true;
+    if (action === "clear-all") selection.checked = false;
+    if (action === "empty-shop") {
+      selection.checked = item.limit !== null;
+      if (item.limit !== null) selection.count = item.limit;
+    }
+  });
+  renderShopGrid();
+  updateShopTarget();
+});
+
+renderRewardList();
+renderShopGrid();
+if (Object.values(state.shopSelections).some((selection) => selection.checked)) updateShopTarget();
+document.querySelectorAll(".target-picker").forEach(setupAnimatedDetails);
 
 renderOptions();
 calculate();
