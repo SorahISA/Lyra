@@ -1,7 +1,6 @@
 const STORAGE_KEY = window.BdonProfiles?.stateKey() ?? "bdon-calc-teams-v1";
 const OPTIMIZER_KEY = window.BdonProfiles?.optimizerKey() ?? "bdon-calc-optimizer-v1";
 const MAX_TARGET = 2_147_483_647;
-const SOLVE_TIMEOUT = 20_000;
 const RANK_ORDER = ["SS", "S", "A", "B", "C", "D"];
 const NORMAL_RATES = {
   SS: { quarterPt: 400, cp: 10 }, S: { quarterPt: 300, cp: 8 },
@@ -10,7 +9,7 @@ const NORMAL_RATES = {
 };
 const EVENT_RATES = {
   SS: { quarterPt: 100 }, S: { quarterPt: 78 }, A: { quarterPt: 65 },
-  B: { quarterPt: 51 }, C: { quarterPt: 40 },
+  B: { quarterPt: 51 }, C: { quarterPt: 40 }, D: { quarterPt: 30 },
 };
 
 const format = (value) => new Intl.NumberFormat("zh-TW", { maximumFractionDigits: 0 }).format(value);
@@ -54,7 +53,6 @@ function readOptimizerSettings() {
 let sharedState = readSharedState();
 let settings = readOptimizerSettings();
 let activeWorker = null;
-let solveTimer = null;
 let hasResult = false;
 let activeSignature = null;
 
@@ -106,10 +104,10 @@ function currentSignature() {
   });
 }
 
-function allowedRanks(maxRank, mode) {
+function allowedRanks(maxRank) {
   const start = RANK_ORDER.indexOf(maxRank);
   if (start < 0) return [];
-  return RANK_ORDER.slice(start).filter((rank) => mode === "normal" || rank !== "D");
+  return RANK_ORDER.slice(start);
 }
 
 function actionPoints(quarterPt, multiplier, bonus) {
@@ -123,7 +121,7 @@ function generateActions(target) {
   const maxFire = settings.maxFire;
   sharedState.normalOptions.forEach((team, teamIndex) => {
     const bonus = bonusNumber(team?.pt);
-    allowedRanks(team?.rank, "normal").forEach((rank) => {
+    allowedRanks(team?.rank).forEach((rank) => {
       for (let fire = 0; fire <= maxFire; fire += 1) {
         const multiplier = fire === 0 ? 1 : fire * 5;
         const points = actionPoints(NORMAL_RATES[rank].quarterPt, multiplier, bonus);
@@ -140,7 +138,7 @@ function generateActions(target) {
   [200, 400, 800, 1600].forEach((cpCost) => {
     sharedState.eventOptions.forEach((team, teamIndex) => {
       const bonus = bonusNumber(team?.pt);
-      allowedRanks(team?.rank, "event").forEach((rank) => {
+      allowedRanks(team?.rank).forEach((rank) => {
         const points = actionPoints(EVENT_RATES[rank].quarterPt, cpCost, bonus);
         if (points <= 0 || points > target) return;
         actions.push({
@@ -226,8 +224,6 @@ function renderFailure(kind, status, title, copy) {
 function stopWorker() {
   if (activeWorker) activeWorker.terminate();
   activeWorker = null;
-  clearTimeout(solveTimer);
-  solveTimer = null;
   document.querySelector("#calculateButton").disabled = false;
   document.querySelector("#cancelButton").hidden = true;
 }
@@ -258,7 +254,7 @@ function beginCalculation() {
   }
 
   hasResult = false;
-  setResultState("running", "正在搜尋精確解", "計算中…", `正在比較 ${format(actions.length)} 種打法，頁面仍可正常操作。`);
+  setResultState("running", "正在搜尋精確解", "計算中…", "正在尋找總場次最少的精確打法，頁面仍可正常操作。");
   document.querySelector("#calculateButton").disabled = true;
   document.querySelector("#cancelButton").hidden = false;
   activeSignature = currentSignature();
@@ -279,11 +275,6 @@ function beginCalculation() {
     renderFailure("error", "計算發生錯誤", "求解器無法啟動", "請重新整理頁面後再試一次。");
   };
   activeWorker.postMessage({ actions, target, initialCp });
-  solveTimer = setTimeout(() => {
-    activeSignature = null;
-    stopWorker();
-    renderFailure("timeout", "20 秒內尚未完成", "暫時無法判定", "這不代表無解；可縮小火量上限或調整目標後再試一次。");
-  }, SOLVE_TIMEOUT);
 }
 
 document.querySelectorAll('[name="maxFire"]').forEach((input) => {

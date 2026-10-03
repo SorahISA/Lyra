@@ -9,7 +9,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2308111f'/%3E%3Cpath d='M35 8c3 12-6 14-2 23 2-6 8-8 9-15 9 10 13 19 8 29-4 8-12 12-20 11-12-1-20-9-19-20 1-9 8-15 14-22 0 8 3 10 6 13-2-8 3-13 4-19Z' fill='%23ff7a45'/%3E%3Cpath d='M32 31c1 6-4 8-3 13 1 3 6 4 8 0 2-4-1-8-3-11 6 4 9 9 7 15-2 5-7 8-12 7-7-1-11-6-9-12 2-5 7-8 8-13 1 3 2 4 4 5Z' fill='%235de4ff'/%3E%3C/svg%3E" />
     <link rel="stylesheet" href="optimizer.css?v=20261003-1" />
     <script src="profiles.js?v=20261003-1" defer></script>
-    <script src="optimizer.js?v=20261003-2" defer></script>
+    <script src="optimizer.js?v=20261003-3" defer></script>
   </head>
   <body>
     <main class="optimizer-shell">
@@ -53,7 +53,7 @@
           <div class="team-block event-block">
             <div class="block-title"><h3>活動隊伍</h3><span id="eventCount">0 隊</span></div>
             <div class="team-list" id="eventTeams"></div>
-            <p class="rule-note"><b>活動 D</b> 暫不納入精算；其他隊伍會自動嘗試最高評級以下至 C。</p>
+            <p class="rule-note">活動隊伍會自動嘗試最高評級以下至 D 的所有評級。</p>
           </div>
 
           <div class="settings-divider"></div>
@@ -83,7 +83,7 @@
 
           <div class="calculation-actions">
             <button class="calculate-button" id="calculateButton" type="button">
-              <span>開始計算</span><small>只在按下後計算 · 最長等待 20 秒</small>
+              <span>開始計算</span><small>只在按下後計算 · 可隨時取消</small>
             </button>
             <button class="cancel-button" id="cancelButton" type="button" hidden>取消計算</button>
           </div>
