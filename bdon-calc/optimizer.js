@@ -26,10 +26,9 @@ function readSharedState() {
       ownedCp: Math.floor(number(saved?.ownedCp)),
       normalOptions: Array.isArray(saved?.normalOptions) ? saved.normalOptions : [],
       eventOptions: Array.isArray(saved?.eventOptions) ? saved.eventOptions : [],
-      raw: saved ?? {},
     };
   } catch {
-    return { targetPt: 1000, ownedPt: 0, ownedCp: 0, normalOptions: [], eventOptions: [], raw: {} };
+    return { targetPt: 1000, ownedPt: 0, ownedCp: 0, normalOptions: [], eventOptions: [] };
   }
 }
 
@@ -74,16 +73,9 @@ function renderSharedState(markStale = false) {
   document.querySelector("#goalPt").textContent = format(sharedState.targetPt);
   document.querySelector("#ownedPtDisplay").textContent = format(sharedState.ownedPt);
   document.querySelector("#remainingPt").textContent = format(remaining);
-  document.querySelector("#ownedCp").value = sharedState.ownedCp;
   renderTeams("normal", sharedState.normalOptions);
   renderTeams("event", sharedState.eventOptions);
   if (markStale) markDirty("設定已更新，請重新計算");
-}
-
-function saveSharedCp(value) {
-  sharedState.ownedCp = Math.floor(number(value));
-  sharedState.raw = { ...sharedState.raw, ownedCp: sharedState.ownedCp };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sharedState.raw));
 }
 
 function currentSignature() {
@@ -232,13 +224,6 @@ document.querySelectorAll('[name="maxFire"]').forEach((input) => {
     localStorage.setItem(OPTIMIZER_KEY, JSON.stringify(settings));
     markDirty("搜尋範圍已更新，尚未計算");
   });
-});
-
-document.querySelector("#ownedCp").addEventListener("change", (event) => {
-  const value = Math.floor(number(event.target.value));
-  event.target.value = value;
-  saveSharedCp(value);
-  markDirty("CP 已更新，尚未計算");
 });
 
 document.querySelector("#calculateButton").addEventListener("click", beginCalculation);
