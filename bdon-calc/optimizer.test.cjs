@@ -30,6 +30,7 @@ vm.runInContext(
 
 assert.equal(core.actionPoints(78, 200, 0), 3900, "S 19.5 × 200");
 assert.equal(core.actionPoints(65, 200, 43), 4647, "A 16.25 × 200 × 1.43");
+assert.equal(core.actionPoints(65, 200, 43.5), 4663, "A 16.25 × 200 × 1.435");
 assert.equal(core.actionPoints(51, 400, 500), 30600, "B 12.75 × 400 × 6");
 assert.equal(core.actionPoints(53, 200, 0), 2650, "13.25 × 200");
 assert.deepEqual(core.allowedRanks("A", "normal"), ["A", "B", "C", "D"]);
@@ -49,6 +50,17 @@ assert.deepEqual(core.allowedRanks("A", "event"), ["A", "B", "C"]);
   assert.deepEqual([...new Set(normal.map((candidate) => candidate.fire))], [0, 1, 2, 3, 4, 5]);
   assert.deepEqual([...new Set(event.map((candidate) => candidate.cpCost))], [200, 400, 800, 1600]);
   assert.ok(!event.some((candidate) => candidate.rank === "D"));
+}
+
+{
+  const [action] = core.generateActions({
+    target: 1_000_000,
+    maxFire: 0,
+    normalOptions: [{ name: "半百分點", rank: "D", pt: 43.5 }],
+    eventOptions: [],
+  });
+  assert.equal(action.bonus, 43.5);
+  assert.equal(action.points, 21);
 }
 
 function action(overrides) {

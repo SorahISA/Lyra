@@ -9,6 +9,7 @@ const number = (value, fallback = 0) => {
   const parsed = Number.parseFloat(value);
   return Number.isFinite(parsed) ? Math.max(0, parsed) : fallback;
 };
+const bonusNumber = (value) => Math.min(500, Math.round(number(value) * 2) / 2);
 const escapeHtml = (value) => String(value)
   .replaceAll("&", "&amp;")
   .replaceAll("<", "&lt;")
@@ -52,7 +53,7 @@ function teamMarkup(team, mode, index) {
   const fallback = `${mode === "normal" ? "一般" : "活動"}隊伍 ${index + 1}`;
   const name = typeof team?.name === "string" && team.name.trim() ? team.name.trim() : fallback;
   const rank = ["SS", "S", "A", "B", "C", "D"].includes(team?.rank) ? team.rank : "A";
-  const bonus = Math.min(500, Math.floor(number(team?.pt)));
+  const bonus = bonusNumber(team?.pt);
   return `<article class="team-chip ${mode}">
     <span class="team-index">${index + 1}</span>
     <div><b>${escapeHtml(name)}</b><small>pt 加成 ${bonus}%</small></div>

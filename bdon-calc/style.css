@@ -231,8 +231,6 @@ label > span:first-child { display: block; margin: 0 0 7px; color: var(--muted);
 .shop-quantity > span:first-child { display: inline; margin: 0; color: var(--muted); font-size: .62rem; }
 .shop-quantity input { min-width: 0; width: 100%; height: 30px; border: 1px solid #31455d; border-radius: 7px; outline: 0; background: #071320; color: var(--text); text-align: center; font-size: .72rem; font-weight: 800; }
 .shop-quantity input:focus { border-color: var(--cyan); }
-.approx-inline { display: block; padding-left: 0; color: #ffad66; font-size: .52rem; font-weight: 700; white-space: nowrap; }
-.approx-row small { color: #ffad66; font-size: .6rem; }
 .shop-bulk-actions { display: flex; flex-wrap: wrap; gap: 7px; padding: 4px 12px 10px; }
 .shop-bulk-actions button { padding: 7px 10px; border: 1px solid #314a63; border-radius: 8px; background: #102033; color: #bdcde0; cursor: pointer; font-size: .68rem; font-weight: 800; }
 .shop-bulk-actions button:hover { border-color: var(--cyan); color: var(--cyan); }

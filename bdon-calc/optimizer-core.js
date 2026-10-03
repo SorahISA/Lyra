@@ -19,6 +19,7 @@
     const parsed = Number.parseFloat(value);
     return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
   };
+  const bonusNumber = (value) => Math.min(500, Math.round(safeNumber(value) * 2) / 2);
 
   function allowedRanks(maxRank, mode) {
     const start = RANK_ORDER.indexOf(maxRank);
@@ -27,14 +28,15 @@
   }
 
   function actionPoints(quarterPt, multiplier, bonus) {
-    return Math.floor(quarterPt * multiplier * (100 + bonus) / 400);
+    const halfPercent = Math.round(bonusNumber(bonus) * 2);
+    return Math.floor(quarterPt * multiplier * (200 + halfPercent) / 800);
   }
 
   function generateActions({ target, maxFire, normalOptions, eventOptions }) {
     let order = 0;
     const actions = [];
     normalOptions.forEach((team, teamIndex) => {
-      const bonus = Math.min(500, Math.floor(safeNumber(team?.pt)));
+      const bonus = bonusNumber(team?.pt);
       allowedRanks(team?.rank, "normal").forEach((rank) => {
         for (let fire = 0; fire <= maxFire; fire += 1) {
           const multiplier = fire === 0 ? 1 : fire * 5;
@@ -58,7 +60,7 @@
 
     EVENT_CP_COSTS.forEach((cpCost) => {
       eventOptions.forEach((team, teamIndex) => {
-        const bonus = Math.min(500, Math.floor(safeNumber(team?.pt)));
+        const bonus = bonusNumber(team?.pt);
         allowedRanks(team?.rank, "event").forEach((rank) => {
           const points = actionPoints(EVENT_RATES[rank].quarterPt, cpCost, bonus);
           if (points <= 0 || points > target) return;
