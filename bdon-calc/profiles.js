@@ -73,9 +73,109 @@
     };
   }
 
-  function createProfile() {
+  let modalResolve = null;
+  let modalReturnFocus = null;
+
+  function ensureProfileModal() {
+    let modal = document.querySelector("#profileModal");
+    if (modal) return modal;
+
+    const style = document.createElement("style");
+    style.textContent = `
+      body.profile-modal-open { overflow: hidden; }
+      .profile-modal[hidden] { display: none; }
+      .profile-modal { position: fixed; inset: 0; z-index: 1000; display: grid; place-items: center; padding: 20px; }
+      .profile-modal-backdrop { position: absolute; inset: 0; background: rgb(2 8 15 / 76%); backdrop-filter: blur(5px); }
+      .profile-modal-card { position: relative; width: min(100%, 430px); padding: 22px; border: 1px solid #35506a; border-radius: 16px; background: #0c1b2c; color: #f4f8ff; box-shadow: 0 26px 80px rgb(0 0 0 / 55%); }
+      .profile-modal-card h2 { margin: 0; font-size: 1.05rem; }
+      .profile-modal-message { margin: 9px 0 0; color: #94a6bd; font-size: .8rem; line-height: 1.55; }
+      .profile-modal-label { display: grid; gap: 7px; margin-top: 17px; color: #94a6bd; font-size: .7rem; font-weight: 800; }
+      .profile-modal-input { width: 100%; height: 42px; padding: 0 11px; border: 1px solid #35506a; border-radius: 9px; outline: 0; background: #071320; color: #f4f8ff; font: inherit; font-weight: 800; }
+      .profile-modal-input:focus { border-color: #5de4ff; outline: 2px solid #5de4ff; outline-offset: 2px; }
+      .profile-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+      .profile-modal-actions button { min-width: 82px; height: 38px; padding: 0 13px; border: 1px solid #35506a; border-radius: 9px; background: #102238; color: #c6d6e8; cursor: pointer; font: inherit; font-size: .74rem; font-weight: 800; }
+      .profile-modal-actions button:hover, .profile-modal-actions button:focus-visible { border-color: #5de4ff; color: #5de4ff; }
+      .profile-modal-confirm { background: #123b50 !important; color: #5de4ff !important; }
+      .profile-modal-confirm.danger { border-color: #8a4b40; background: #321c1b !important; color: #ff9b79 !important; }
+    `;
+    document.head.append(style);
+
+    modal = document.createElement("div");
+    modal.id = "profileModal";
+    modal.className = "profile-modal";
+    modal.hidden = true;
+    modal.innerHTML = `<div class="profile-modal-backdrop" data-profile-modal-cancel></div>
+      <form class="profile-modal-card" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle" aria-describedby="profileModalMessage">
+        <h2 id="profileModalTitle"></h2>
+        <p class="profile-modal-message" id="profileModalMessage"></p>
+        <label class="profile-modal-label">
+          <span>名稱</span>
+          <input class="profile-modal-input" id="profileModalInput" maxlength="40" autocomplete="off" />
+        </label>
+        <div class="profile-modal-actions">
+          <button type="button" data-profile-modal-cancel>取消</button>
+          <button type="submit" class="profile-modal-confirm">確定</button>
+        </div>
+      </form>`;
+    document.body.append(modal);
+
+    const close = (value) => {
+      modal.hidden = true;
+      document.body.classList.remove("profile-modal-open");
+      const resolve = modalResolve;
+      modalResolve = null;
+      resolve?.(value);
+      modalReturnFocus?.focus();
+      modalReturnFocus = null;
+    };
+    modal.querySelector("form").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const input = modal.querySelector("#profileModalInput");
+      close(input.hidden ? true : input.value);
+    });
+    modal.addEventListener("click", (event) => {
+      if (event.target.closest("[data-profile-modal-cancel]")) close(null);
+    });
+    modal.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        close(null);
+      }
+    });
+    return modal;
+  }
+
+  function openProfileModal({ title, message = "", value = null, confirmText = "確定", danger = false, cancel = true }) {
+    const modal = ensureProfileModal();
+    const input = modal.querySelector("#profileModalInput");
+    const label = input.closest("label");
+    const cancelButton = modal.querySelector(".profile-modal-actions [type='button']");
+    const confirmButton = modal.querySelector(".profile-modal-confirm");
+    modal.querySelector("#profileModalTitle").textContent = title;
+    const messageElement = modal.querySelector("#profileModalMessage");
+    messageElement.textContent = message;
+    messageElement.hidden = !message;
+    label.hidden = value === null;
+    input.hidden = value === null;
+    input.value = value ?? "";
+    cancelButton.hidden = !cancel;
+    confirmButton.textContent = confirmText;
+    confirmButton.classList.toggle("danger", danger);
+    modalReturnFocus = document.activeElement;
+    modal.hidden = false;
+    document.body.classList.add("profile-modal-open");
+    requestAnimationFrame(() => (value === null ? confirmButton : input).focus());
+    return new Promise((resolve) => { modalResolve = resolve; });
+  }
+
+  async function createProfile() {
     const suggested = `設定檔 ${registry.profiles.length + 1}`;
-    const entered = window.prompt("新 profile 名稱", suggested);
+    const entered = await openProfileModal({
+      title: "新增 profile",
+      message: "每個 profile 的隊伍、目標與精算設定彼此獨立。",
+      value: suggested,
+      confirmText: "新增",
+    });
     if (entered === null) return;
     const id = `p_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
     const profile = { id, name: cleanName(entered, suggested) };
@@ -90,22 +190,37 @@
     }
   }
 
-  function renameProfile() {
+  async function renameProfile() {
     const profile = activeProfile();
-    const entered = window.prompt("重新命名 profile", profile.name);
+    const entered = await openProfileModal({
+      title: "重新命名 profile",
+      value: profile.name,
+      confirmText: "儲存",
+    });
     if (entered === null) return;
     profile.name = cleanName(entered, profile.name);
     writeRegistry(registry);
     renderControls();
   }
 
-  function deleteProfile() {
+  async function deleteProfile() {
     if (registry.profiles.length <= 1) {
-      window.alert("至少需要保留一個 profile。");
+      await openProfileModal({
+        title: "無法刪除 profile",
+        message: "至少需要保留一個 profile。",
+        confirmText: "知道了",
+        cancel: false,
+      });
       return;
     }
     const profile = activeProfile();
-    if (!window.confirm(`確定刪除「${profile.name}」？此 profile 的資料將無法復原。`)) return;
+    const confirmed = await openProfileModal({
+      title: `刪除「${profile.name}」？`,
+      message: "此 profile 的隊伍、目標與精算設定將無法復原。",
+      confirmText: "刪除",
+      danger: true,
+    });
+    if (!confirmed) return;
     localStorage.removeItem(stateKey(profile.id));
     localStorage.removeItem(optimizerKey(profile.id));
     registry.profiles = registry.profiles.filter((candidate) => candidate.id !== profile.id);

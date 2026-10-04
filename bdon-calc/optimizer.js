@@ -11,6 +11,7 @@ const EVENT_RATES = {
   SS: { quarterPt: 100 }, S: { quarterPt: 78 }, A: { quarterPt: 65 },
   B: { quarterPt: 51 }, C: { quarterPt: 40 }, D: { quarterPt: 30 },
 };
+const optimizerCore = window.BdonOptimizerCore;
 
 const format = (value) => new Intl.NumberFormat("zh-TW", { maximumFractionDigits: 0 }).format(value);
 const number = (value, fallback = 0) => {
@@ -34,10 +35,9 @@ function readSharedState() {
       ownedCp: Math.floor(number(saved?.ownedCp)),
       normalOptions: Array.isArray(saved?.normalOptions) ? saved.normalOptions : [],
       eventOptions: Array.isArray(saved?.eventOptions) ? saved.eventOptions : [],
-      raw: saved ?? {},
     };
   } catch {
-    return { targetPt: 1000, ownedPt: 0, ownedCp: 0, normalOptions: [], eventOptions: [], raw: {} };
+    return { targetPt: 1000, ownedPt: 0, ownedCp: 0, normalOptions: [], eventOptions: [] };
   }
 }
 
@@ -81,16 +81,9 @@ function renderSharedState(markStale = false) {
   document.querySelector("#goalPt").textContent = format(sharedState.targetPt);
   document.querySelector("#ownedPtDisplay").textContent = format(sharedState.ownedPt);
   document.querySelector("#remainingPt").textContent = format(remaining);
-  document.querySelector("#ownedCp").value = sharedState.ownedCp;
   renderTeams("normal", sharedState.normalOptions);
   renderTeams("event", sharedState.eventOptions);
   if (markStale) markDirty("設定已更新，請重新計算");
-}
-
-function saveSharedCp(value) {
-  sharedState.ownedCp = Math.floor(number(value));
-  sharedState.raw = { ...sharedState.raw, ownedCp: sharedState.ownedCp };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(sharedState.raw));
 }
 
 function currentSignature() {
@@ -154,15 +147,13 @@ function generateActions(target) {
   actions.forEach((action) => {
     const key = `${action.mode}:${action.points}:${action.cpDelta}:${action.fire}`;
     if (!unique.has(key)) unique.set(key, action);
+function generateActions(target) {
+  return optimizerCore.generateActions({
+    target,
+    maxFire: settings.maxFire,
+    normalOptions: sharedState.normalOptions,
+    eventOptions: sharedState.eventOptions,
   });
-  return [...unique.values()];
-}
-
-function gcd(left, right) {
-  let a = Math.abs(left);
-  let b = Math.abs(right);
-  while (b) [a, b] = [b, a % b];
-  return a;
 }
 
 function setResultState(kind, status, title, copy) {
@@ -247,7 +238,7 @@ function beginCalculation() {
     renderFailure("infeasible", "沒有可用打法", "無法建立搜尋範圍", "請確認至少有一隊能取得不超過尚缺 pt 的分數。");
     return;
   }
-  const divisor = actions.reduce((value, action) => gcd(value, action.points), 0);
+  const divisor = actions.reduce((value, action) => optimizerCore.gcd(value, action.points), 0);
   if (divisor && target % divisor !== 0) {
     renderFailure("infeasible", "已證明無精確解", "無法恰好達成", `所有單場得分的最大公因數為 ${format(divisor)}，無法組成 ${format(target)} pt。`);
     return;
@@ -284,13 +275,6 @@ document.querySelectorAll('[name="maxFire"]').forEach((input) => {
     localStorage.setItem(OPTIMIZER_KEY, JSON.stringify(settings));
     markDirty("搜尋範圍已更新，尚未計算");
   });
-});
-
-document.querySelector("#ownedCp").addEventListener("change", (event) => {
-  const value = Math.floor(number(event.target.value));
-  event.target.value = value;
-  saveSharedCp(value);
-  markDirty("CP 已更新，尚未計算");
 });
 
 document.querySelector("#calculateButton").addEventListener("click", beginCalculation);
