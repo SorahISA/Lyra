@@ -139,7 +139,7 @@ h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.65rem); line-height: 1; letter-spa
 .drag-handle:active { cursor: grabbing; }
 .drag-trash { display: flex; align-items: center; gap: 6px; height: 36px; padding: 0 11px; border: 1px solid #a64d47; border-radius: 9px; background: rgb(112 38 38 / 32%); color: #ff9b91; transition: border-color .18s, background .18s, color .18s, box-shadow .18s; }
 .drag-trash > span { font-size: .85rem; }
-.drag-trash b { font-size: .72rem; }
+.drag-trash b { font-size: .78rem; font-weight: 800; }
 body.option-is-dragging .drag-trash { border-color: #ff635b; background: rgb(161 48 48 / 42%); color: #ffc0ba; }
 .drag-trash.drop-active { border-color: #ff4f47; background: rgb(219 55 55 / 42%); color: #fff; box-shadow: 0 0 22px rgb(255 79 71 / 32%); }
 .option-card .rank-options { gap: 5px; }

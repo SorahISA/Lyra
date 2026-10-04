@@ -5,6 +5,10 @@ const vm = require("node:vm");
 const core = require("./optimizer-core.js");
 
 const root = __dirname;
+new vm.Script(fs.readFileSync(path.join(root, "optimizer.js"), "utf8"), {
+  filename: "optimizer.js",
+});
+
 let response = null;
 const context = vm.createContext({
   console,

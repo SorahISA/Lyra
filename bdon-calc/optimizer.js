@@ -97,56 +97,6 @@ function currentSignature() {
   });
 }
 
-function allowedRanks(maxRank) {
-  const start = RANK_ORDER.indexOf(maxRank);
-  if (start < 0) return [];
-  return RANK_ORDER.slice(start);
-}
-
-function actionPoints(quarterPt, multiplier, bonus) {
-  const halfPercent = Math.round(bonusNumber(bonus) * 2);
-  return Math.floor(quarterPt * multiplier * (200 + halfPercent) / 800);
-}
-
-function generateActions(target) {
-  let order = 0;
-  const actions = [];
-  const maxFire = settings.maxFire;
-  sharedState.normalOptions.forEach((team, teamIndex) => {
-    const bonus = bonusNumber(team?.pt);
-    allowedRanks(team?.rank).forEach((rank) => {
-      for (let fire = 0; fire <= maxFire; fire += 1) {
-        const multiplier = fire === 0 ? 1 : fire * 5;
-        const points = actionPoints(NORMAL_RATES[rank].quarterPt, multiplier, bonus);
-        if (points <= 0 || points > target) continue;
-        actions.push({
-          mode: "normal", teamIndex, teamName: team?.name || `一般隊伍 ${teamIndex + 1}`,
-          rank, bonus, fire, multiplier, points,
-          cpDelta: NORMAL_RATES[rank].cp * multiplier, order: order++,
-        });
-      }
-    });
-  });
-
-  [200, 400, 800, 1600].forEach((cpCost) => {
-    sharedState.eventOptions.forEach((team, teamIndex) => {
-      const bonus = bonusNumber(team?.pt);
-      allowedRanks(team?.rank).forEach((rank) => {
-        const points = actionPoints(EVENT_RATES[rank].quarterPt, cpCost, bonus);
-        if (points <= 0 || points > target) return;
-        actions.push({
-          mode: "event", teamIndex, teamName: team?.name || `活動隊伍 ${teamIndex + 1}`,
-          rank, bonus, fire: 0, multiplier: cpCost, cpCost, points,
-          cpDelta: -cpCost, order: order++,
-        });
-      });
-    });
-  });
-
-  const unique = new Map();
-  actions.forEach((action) => {
-    const key = `${action.mode}:${action.points}:${action.cpDelta}:${action.fire}`;
-    if (!unique.has(key)) unique.set(key, action);
 function generateActions(target) {
   return optimizerCore.generateActions({
     target,
