@@ -8,12 +8,12 @@ const rates = {
     D: { pt: 15, item: 18, cp: 3 },
   },
   event: {
-    SS: { pt: 25, item: 24.75 },
-    S: { pt: 19.5, item: 22.25 },
-    A: { pt: 16.25, item: 18.75 },
-    B: { pt: 12.75, item: 17 },
+    SS: { pt: 27.5, item: 28.25 },
+    S: { pt: 22.5, item: 24.5 },
+    A: { pt: 17.5, item: 20.75 },
+    B: { pt: 13.75, item: 17 },
     C: { pt: 10, item: 13.25 },
-    D: { pt: 7.5, item: 7.25 },
+    D: { pt: 7.5, item: 10.75 },
   },
 };
 
@@ -27,60 +27,78 @@ const rewardIcons = {
   "硬幣": "https://assets.bdon.moe/zh-Hant/Item/common/item_icon_coin/item_icon_coin.webp",
   "快照EXP": "https://assets.bdon.moe/zh-Hant/Item/exp/item_icon_exp_005/item_icon_exp_005.webp",
   "團員EXP": "https://assets.bdon.moe/zh-Hant/Item/exp/item_icon_exp_004/item_icon_exp_004.webp",
-  "夢限大MewType 稜晶": "https://assets.bdon.moe/zh-Hant/Item/prism/item_icon_prism_003/item_icon_prism_003.webp",
+  "緋紅碎片（小）": "https://assets.bdon.moe/zh-Hant/Item/fragment/item_icon_fragment_001/item_icon_fragment_001.webp",
+  "緋紅碎片（中）": "https://assets.bdon.moe/zh-Hant/Item/fragment/item_icon_fragment_002/item_icon_fragment_002.webp",
+  "緋紅碎片（大）": "https://assets.bdon.moe/zh-Hant/Item/fragment/item_icon_fragment_003/item_icon_fragment_003.webp",
   "演出技能強化券": "https://assets.bdon.moe/zh-Hant/Item/ticket/item_icon_ticket_skill_001/item_icon_ticket_skill_001.webp",
   "激奏技能強化券": "https://assets.bdon.moe/zh-Hant/Item/ticket/item_icon_ticket_skill_002/item_icon_ticket_skill_002.webp",
   "技能強化券": "https://assets.bdon.moe/zh-Hant/Item/ticket/item_icon_ticket_skill_003/item_icon_ticket_skill_003.webp",
   "SP技能強化券": "https://assets.bdon.moe/zh-Hant/Item/ticket/item_icon_ticket_skill_004/item_icon_ticket_skill_004.webp",
-  "愛的奔流 AtoZ 報酬貼圖": "https://assets.bdon.moe/zh-Hant/Stamp/illust/stamp_illust_yuno_003/stamp_illust_yuno_003.webp",
+  "拜託了，傾心一擲 報酬貼圖": "https://assets.bdon.moe/zh-Hant/Stamp/illust/stamp_illust_nagi_003/stamp_illust_nagi_003.webp",
   "奇蹟水晶": "https://assets.bdon.moe/zh-Hant/Item/crystal/item_icon_crystal_002/item_icon_crystal_002.webp",
   "希望稜晶": "https://assets.bdon.moe/zh-Hant/Item/prism/item_icon_prism_006/item_icon_prism_006.webp",
-  "峰月律 · Night・Flight": "https://assets.bdon.moe/zh-Hans/MemberCard/63/member_thumbnail/member_thumbnail.webp",
+  "開服紀念！SR團員奇蹟兌換券": "https://assets.bdon.moe/zh-Hant/Item/ticket/item_icon_ticket_miracle_003/item_icon_ticket_miracle_003.webp",
+  "和泉朋花 · 微笑，隱於幽暗": "https://assets.bdon.moe/zh-Hans/MemberCard/67/member_thumbnail/member_thumbnail.webp",
   "幸運水晶": "https://assets.bdon.moe/zh-Hant/Item/crystal/item_icon_crystal_001/item_icon_crystal_001.webp",
-  "活動獎章（紺碧）": "https://assets.bdon.moe/zh-Hant/Item/event/item_icon_event_badge_002/item_icon_event_badge_002.webp",
+  "millsage 稜晶": "https://assets.bdon.moe/zh-Hant/Item/prism/item_icon_prism_004/item_icon_prism_004.webp",
+  "活動獎章（緋紅）": "https://assets.bdon.moe/zh-Hant/Item/event/item_icon_event_badge_001/item_icon_event_badge_001.webp",
 };
 
 const pointRewards = [
-  [500,40,"星鑽"], [1000,15000,"硬幣"], [2000,15000,"快照EXP"], [3000,15000,"團員EXP"], [4000,5,"夢限大MewType 稜晶"], [5000,5,"演出技能強化券"],
-  [6000,5,"激奏技能強化券"], [7000,5,"技能強化券"], [8000,5,"夢限大MewType 稜晶"], [9000,40,"星鑽"], [10000,5,"夢限大MewType 稜晶"], [12000,15000,"硬幣"],
-  [14000,45000,"快照EXP"], [15000,45000,"團員EXP"], [16000,10,"夢限大MewType 稜晶"], [18000,5,"演出技能強化券"], [20000,5,"激奏技能強化券"], [22000,5,"技能強化券"],
-  [24000,5,"SP技能強化券"], [27000,40,"星鑽"], [30000,1,"愛的奔流 AtoZ 報酬貼圖"], [35000,5,"奇蹟水晶"], [40000,45000,"硬幣"], [45000,10,"夢限大MewType 稜晶"],
-  [50000,5,"奇蹟水晶"], [55000,25,"演出技能強化券"], [60000,25,"激奏技能強化券"], [65000,20,"技能強化券"], [70000,5,"奇蹟水晶"], [75000,40,"星鑽"],
-  [80000,5,"奇蹟水晶"], [85000,5,"希望稜晶"], [90000,25,"演出技能強化券"], [95000,10,"夢限大MewType 稜晶"], [100000,1,"峰月律 · Night・Flight"], [105000,10,"幸運水晶"],
-  [110000,10,"幸運水晶"], [115000,5,"奇蹟水晶"], [120000,25,"激奏技能強化券"], [125000,40,"星鑽"], [130000,5,"SP技能強化券"], [135000,10,"奇蹟水晶"],
-  [140000,10,"夢限大MewType 稜晶"], [145000,90000,"團員EXP"], [150000,1,"峰月律 · Night・Flight"], [155000,40,"星鑽"], [160000,10,"幸運水晶"], [165000,10,"幸運水晶"],
-  [170000,25,"演出技能強化券"], [175000,10,"奇蹟水晶"], [180000,10,"夢限大MewType 稜晶"], [185000,25,"激奏技能強化券"], [190000,10,"SP技能強化券"], [200000,1,"峰月律 · Night・Flight"],
-  [210000,90000,"硬幣"], [220000,40,"星鑽"], [230000,25,"夢限大MewType 稜晶"], [240000,10,"奇蹟水晶"], [250000,90000,"快照EXP"], [260000,5,"希望稜晶"],
-  [270000,55,"演出技能強化券"], [280000,90000,"硬幣"], [300000,1,"峰月律 · Night・Flight"], [330000,55,"激奏技能強化券"], [375000,15,"奇蹟水晶"], [450000,40,"星鑽"],
-  [525000,55,"夢限大MewType 稜晶"], [600000,20,"SP技能強化券"], [675000,1,"峰月律 · Night・Flight"], [750000,20,"希望稜晶"], [825000,20,"奇蹟水晶"], [900000,40,"星鑽"],
-  [1000000,100000,"活動獎章（紺碧）"], [1250000,100000,"活動獎章（紺碧）"], [1500000,100000,"活動獎章（紺碧）"], [2000000,100000,"活動獎章（紺碧）"], [2500000,100000,"活動獎章（紺碧）"], [3000000,100000,"活動獎章（紺碧）"],
+  [500, 45, "星鑽"], [1000, 15000, "硬幣"], [2000, 25000, "團員EXP"], [3000, 25000, "快照EXP"], [4000, 100, "緋紅碎片（小）"], [5000, 60, "緋紅碎片（中）"],
+  [6000, 30, "緋紅碎片（大）"], [7000, 25000, "團員EXP"], [8000, 25000, "快照EXP"], [9000, 45, "星鑽"], [10000, 30000, "硬幣"], [12000, 200, "緋紅碎片（小）"],
+  [14000, 120, "緋紅碎片（中）"], [16000, 60, "緋紅碎片（大）"], [18000, 60000, "硬幣"], [20000, 200, "緋紅碎片（小）"], [22000, 120, "緋紅碎片（中）"], [24000, 60, "緋紅碎片（大）"],
+  [27000, 45, "星鑽"], [30000, 1, "拜託了，傾心一擲 報酬貼圖"], [35000, 5, "奇蹟水晶"], [40000, 10, "幸運水晶"], [45000, 5, "奇蹟水晶"], [50000, 1, "開服紀念！SR團員奇蹟兌換券"],
+  [55000, 10, "幸運水晶"], [60000, 150000, "硬幣"], [65000, 5, "奇蹟水晶"], [70000, 10, "幸運水晶"], [75000, 1, "和泉朋花 · 微笑，隱於幽暗"], [80000, 5, "奇蹟水晶"],
+  [85000, 10, "幸運水晶"], [90000, 30, "演出技能強化券"], [95000, 30, "激奏技能強化券"], [100000, 45, "星鑽"], [105000, 5, "奇蹟水晶"], [110000, 30, "演出技能強化券"],
+  [115000, 30, "激奏技能強化券"], [120000, 5, "奇蹟水晶"], [125000, 1, "和泉朋花 · 微笑，隱於幽暗"], [130000, 30, "演出技能強化券"], [135000, 30, "激奏技能強化券"], [140000, 5, "SP技能強化券"],
+  [145000, 10, "技能強化券"], [150000, 45, "星鑽"], [155000, 5, "SP技能強化券"], [160000, 10, "技能強化券"], [165000, 30, "演出技能強化券"], [170000, 30, "激奏技能強化券"],
+  [175000, 5, "SP技能強化券"], [180000, 10, "技能強化券"], [185000, 5, "SP技能強化券"], [190000, 10, "技能強化券"], [200000, 1, "和泉朋花 · 微笑，隱於幽暗"], [210000, 10, "奇蹟水晶"],
+  [220000, 45, "星鑽"], [230000, 10, "SP技能強化券"], [240000, 10, "奇蹟水晶"], [250000, 10, "SP技能強化券"], [260000, 10, "奇蹟水晶"], [270000, 10, "希望稜晶"],
+  [280000, 10, "奇蹟水晶"], [300000, 1, "和泉朋花 · 微笑，隱於幽暗"], [330000, 40, "millsage 稜晶"], [375000, 60, "millsage 稜晶"], [450000, 45, "星鑽"], [525000, 1, "和泉朋花 · 微笑，隱於幽暗"],
+  [600000, 100, "millsage 稜晶"], [675000, 100, "millsage 稜晶"], [750000, 20, "奇蹟水晶"], [825000, 20, "希望稜晶"], [900000, 45, "星鑽"], [1000000, 100000, "活動獎章（緋紅）"],
+  [1250000, 100000, "活動獎章（緋紅）"], [1500000, 100000, "活動獎章（緋紅）"], [2000000, 100000, "活動獎章（緋紅）"],
 ].map(([point, count, name]) => ({ point, count, name, icon: rewardIcons[name] }));
 
 const itemAssetRoot = "https://assets.bdon.moe/zh-Hant/Item";
 const shopItems = [
-  { id: "rest", name: "圓滾滾的休息時刻", quantity: 1, price: 100000, limit: 5, icon: "https://assets.bdon.moe/zh-Hans/SupportCard/64/snap_thumbnail/snap_thumbnail.webp" },
+  { id: "support-discount", name: "朝那道光伸出手", quantity: 1, price: 75000, limit: 1, icon: "https://assets.bdon.moe/zh-Hans/SupportCard/67/snap_thumbnail/snap_thumbnail.webp" },
+  { id: "support-regular", name: "朝那道光伸出手", quantity: 1, price: 100000, limit: 4, icon: "https://assets.bdon.moe/zh-Hans/SupportCard/67/snap_thumbnail/snap_thumbnail.webp" },
   { id: "gacha", name: "交織的樂章轉蛋券", quantity: 1, price: 100000, limit: 3, icon: `${itemAssetRoot}/ticket/item_icon_ticket_gacha_001/item_icon_ticket_gacha_001.webp` },
-  { id: "coin-limited", name: "硬幣", quantity: 60000, price: 3500, limit: 20, icon: `${itemAssetRoot}/common/item_icon_coin/item_icon_coin.webp` },
-  { id: "member-exp-limited", name: "團員 EXP", quantity: 30000, price: 1750, limit: 10, icon: `${itemAssetRoot}/exp/item_icon_exp_004/item_icon_exp_004.webp` },
-  { id: "snapshot-exp-limited", name: "快照 EXP", quantity: 30000, price: 1750, limit: 10, icon: `${itemAssetRoot}/exp/item_icon_exp_005/item_icon_exp_005.webp` },
-  { id: "miracle", name: "奇蹟水晶", quantity: 5, price: 26250, limit: 5, icon: `${itemAssetRoot}/crystal/item_icon_crystal_002/item_icon_crystal_002.webp` },
-  { id: "fortune", name: "幸運水晶", quantity: 5, price: 8750, limit: 2, icon: `${itemAssetRoot}/crystal/item_icon_crystal_001/item_icon_crystal_001.webp` },
-  { id: "azure-l-limited", name: "紺碧碎片（大）", quantity: 120, price: 7000, limit: 50, icon: `${itemAssetRoot}/fragment/item_icon_fragment_006/item_icon_fragment_006.webp` },
-  { id: "azure-m-limited", name: "紺碧碎片（中）", quantity: 240, price: 7000, limit: 50, icon: `${itemAssetRoot}/fragment/item_icon_fragment_005/item_icon_fragment_005.webp` },
-  { id: "azure-s-limited", name: "紺碧碎片（小）", quantity: 400, price: 7000, limit: 50, icon: `${itemAssetRoot}/fragment/item_icon_fragment_004/item_icon_fragment_004.webp` },
-  { id: "sp-skill", name: "SP 技能強化券", quantity: 5, price: 26250, limit: 20, icon: `${itemAssetRoot}/ticket/item_icon_ticket_skill_004/item_icon_ticket_skill_004.webp` },
-  { id: "skill", name: "技能強化券", quantity: 5, price: 8750, limit: 18, icon: `${itemAssetRoot}/ticket/item_icon_ticket_skill_003/item_icon_ticket_skill_003.webp` },
-  { id: "live-skill", name: "演出技能強化券", quantity: 5, price: 3500, limit: 40, icon: `${itemAssetRoot}/ticket/item_icon_ticket_skill_001/item_icon_ticket_skill_001.webp` },
-  { id: "gekiso-skill", name: "激奏技能強化券", quantity: 5, price: 3500, limit: 40, icon: `${itemAssetRoot}/ticket/item_icon_ticket_skill_002/item_icon_ticket_skill_002.webp` },
-  { id: "hope-prism", name: "希望稜晶", quantity: 5, price: 26250, limit: 15, icon: `${itemAssetRoot}/prism/item_icon_prism_006/item_icon_prism_006.webp` },
-  { id: "mewtype-prism", name: "夢限大 MewType 稜晶", quantity: 5, price: 8750, limit: 50, icon: `${itemAssetRoot}/prism/item_icon_prism_003/item_icon_prism_003.webp` },
-  { id: "coin-open", name: "硬幣", quantity: 1, price: 1, limit: null, icon: `${itemAssetRoot}/common/item_icon_coin/item_icon_coin.webp` },
+  { id: "music-ticket", name: "樂曲兌換券", quantity: 1, price: 5000, limit: 10, icon: `${itemAssetRoot}/ticket/item_icon_ticket_music/item_icon_ticket_music.webp` },
+  { id: "miracle", name: "奇蹟水晶", quantity: 5, price: 13500, limit: 6, icon: `${itemAssetRoot}/crystal/item_icon_crystal_002/item_icon_crystal_002.webp` },
+  { id: "fortune", name: "幸運水晶", quantity: 5, price: 7200, limit: 10, icon: `${itemAssetRoot}/crystal/item_icon_crystal_001/item_icon_crystal_001.webp` },
+  { id: "sp-skill", name: "SP 技能強化券", quantity: 5, price: 13500, limit: 20, icon: `${itemAssetRoot}/ticket/item_icon_ticket_skill_004/item_icon_ticket_skill_004.webp` },
+  { id: "skill", name: "技能強化券", quantity: 5, price: 7200, limit: 20, icon: `${itemAssetRoot}/ticket/item_icon_ticket_skill_003/item_icon_ticket_skill_003.webp` },
+  { id: "live-skill", name: "演出技能強化券", quantity: 5, price: 2100, limit: 45, icon: `${itemAssetRoot}/ticket/item_icon_ticket_skill_001/item_icon_ticket_skill_001.webp` },
+  { id: "gekiso-skill", name: "激奏技能強化券", quantity: 5, price: 2100, limit: 45, icon: `${itemAssetRoot}/ticket/item_icon_ticket_skill_002/item_icon_ticket_skill_002.webp` },
+  { id: "hope-prism", name: "希望稜晶", quantity: 5, price: 13500, limit: 15, icon: `${itemAssetRoot}/prism/item_icon_prism_006/item_icon_prism_006.webp` },
+  { id: "millsage-prism", name: "millsage 稜晶", quantity: 5, price: 7200, limit: 30, icon: `${itemAssetRoot}/prism/item_icon_prism_004/item_icon_prism_004.webp` },
+  { id: "crimson-l-limited", name: "緋紅碎片（大）", quantity: 120, price: 5500, limit: 50, icon: `${itemAssetRoot}/fragment/item_icon_fragment_003/item_icon_fragment_003.webp` },
+  { id: "crimson-m-limited", name: "緋紅碎片（中）", quantity: 240, price: 5500, limit: 50, icon: `${itemAssetRoot}/fragment/item_icon_fragment_002/item_icon_fragment_002.webp` },
+  { id: "crimson-s-limited", name: "緋紅碎片（小）", quantity: 400, price: 5500, limit: 50, icon: `${itemAssetRoot}/fragment/item_icon_fragment_001/item_icon_fragment_001.webp` },
+  { id: "member-exp-limited", name: "團員 EXP", quantity: 20000, price: 1100, limit: 20, icon: `${itemAssetRoot}/exp/item_icon_exp_004/item_icon_exp_004.webp` },
+  { id: "snapshot-exp-limited", name: "快照 EXP", quantity: 20000, price: 1100, limit: 20, icon: `${itemAssetRoot}/exp/item_icon_exp_005/item_icon_exp_005.webp` },
+  { id: "coin-limited", name: "硬幣", quantity: 60000, price: 2800, limit: 20, icon: `${itemAssetRoot}/common/item_icon_coin/item_icon_coin.webp` },
+  { id: "crimson-l-open", name: "緋紅碎片（大）", quantity: 3, price: 1800, limit: null, icon: `${itemAssetRoot}/fragment/item_icon_fragment_003/item_icon_fragment_003.webp` },
+  { id: "crimson-m-open", name: "緋紅碎片（中）", quantity: 6, price: 1800, limit: null, icon: `${itemAssetRoot}/fragment/item_icon_fragment_002/item_icon_fragment_002.webp` },
+  { id: "crimson-s-open", name: "緋紅碎片（小）", quantity: 10, price: 1800, limit: null, icon: `${itemAssetRoot}/fragment/item_icon_fragment_001/item_icon_fragment_001.webp` },
   { id: "member-exp-open", name: "團員 EXP", quantity: 1, price: 1, limit: null, icon: `${itemAssetRoot}/exp/item_icon_exp_004/item_icon_exp_004.webp` },
   { id: "snapshot-exp-open", name: "快照 EXP", quantity: 1, price: 1, limit: null, icon: `${itemAssetRoot}/exp/item_icon_exp_005/item_icon_exp_005.webp` },
-  { id: "azure-l-open", name: "紺碧碎片（大）", quantity: 3, price: 1800, limit: null, icon: `${itemAssetRoot}/fragment/item_icon_fragment_006/item_icon_fragment_006.webp` },
-  { id: "azure-m-open", name: "紺碧碎片（中）", quantity: 6, price: 1800, limit: null, icon: `${itemAssetRoot}/fragment/item_icon_fragment_005/item_icon_fragment_005.webp` },
-  { id: "azure-s-open", name: "紺碧碎片（小）", quantity: 10, price: 1800, limit: null, icon: `${itemAssetRoot}/fragment/item_icon_fragment_004/item_icon_fragment_004.webp` },
+  { id: "coin-open", name: "硬幣", quantity: 1, price: 1, limit: null, icon: `${itemAssetRoot}/common/item_icon_coin/item_icon_coin.webp` },
 ];
+
+const SHOP_CATALOG_VERSION = 3;
+const shopSelectionAliases = {
+  "support-regular": "rest",
+  "millsage-prism": "mewtype-prism",
+  "crimson-l-limited": "azure-l-limited",
+  "crimson-m-limited": "azure-m-limited",
+  "crimson-s-limited": "azure-s-limited",
+  "crimson-l-open": "azure-l-open",
+  "crimson-m-open": "azure-m-open",
+  "crimson-s-open": "azure-s-open",
+};
 
 const STORAGE_KEY = window.BdonProfiles?.stateKey() ?? "bdon-calc-teams-v1";
 const OPTIMIZER_KEY = window.BdonProfiles?.optimizerKey() ?? "bdon-calc-optimizer-v1";
@@ -112,9 +130,11 @@ function sanitizeOptions(options, mode) {
 
 function sanitizeShopSelections(saved) {
   const selections = {};
-  const useSavedCounts = saved?.shopQuantityDefaultsVersion === 2;
+  const useSavedCounts = saved?.shopQuantityDefaultsVersion === SHOP_CATALOG_VERSION;
   shopItems.forEach((item) => {
-    const selection = saved?.shopSelections?.[item.id];
+    const previousId = shopSelectionAliases[item.id];
+    const selection = saved?.shopSelections?.[item.id]
+      ?? (previousId ? saved?.shopSelections?.[previousId] : undefined);
     const defaultCount = item.limit ?? 1;
     let count = useSavedCounts
       ? Math.max(1, Math.floor(Number.parseFloat(selection?.count) || defaultCount))
@@ -123,9 +143,12 @@ function sanitizeShopSelections(saved) {
     selections[item.id] = { checked: Boolean(selection?.checked), count };
   });
 
-  if (saved?.shopItemId && selections[saved.shopItemId] && !Object.values(selections).some((item) => item.checked)) {
-    const legacyItem = shopItems.find((item) => item.id === saved.shopItemId);
-    selections[saved.shopItemId] = {
+  const legacySelectedId = shopItems.some((item) => item.id === saved?.shopItemId)
+    ? saved.shopItemId
+    : Object.entries(shopSelectionAliases).find(([, previousId]) => previousId === saved?.shopItemId)?.[0];
+  if (legacySelectedId && selections[legacySelectedId] && !Object.values(selections).some((item) => item.checked)) {
+    const legacyItem = shopItems.find((item) => item.id === legacySelectedId);
+    selections[legacySelectedId] = {
       checked: true,
       count: legacyItem?.limit ?? Math.max(1, Math.floor(Number.parseFloat(saved.shopExchangeCount) || 1)),
     };
@@ -220,7 +243,7 @@ function persistState() {
       previewFire: state.previewFire,
       previewCp: state.previewCp,
       shopSelections: state.shopSelections,
-      shopQuantityDefaultsVersion: 2,
+      shopQuantityDefaultsVersion: SHOP_CATALOG_VERSION,
     }));
   } catch {
     // The calculator still works if local browser storage is unavailable.
@@ -250,7 +273,7 @@ function portableState() {
       previewFire: state.previewFire,
       previewCp: state.previewCp,
       shopSelections: state.shopSelections,
-      shopQuantityDefaultsVersion: 2,
+      shopQuantityDefaultsVersion: SHOP_CATALOG_VERSION,
       optimizerSettings,
     },
   };
@@ -293,7 +316,7 @@ function applyPortableState(payload) {
   state.nextEventId = state.eventOptions.length + 1;
   state.shopSelections = sanitizeShopSelections({
     shopSelections: imported.shopSelections,
-    shopQuantityDefaultsVersion: 2,
+    shopQuantityDefaultsVersion: imported.shopQuantityDefaultsVersion,
   });
   state.previewFire = PREVIEW_FIRES.includes(Number(imported.previewFire)) ? Number(imported.previewFire) : 5;
   state.previewCp = PREVIEW_CPS.includes(Number(imported.previewCp)) ? Number(imported.previewCp) : 200;
@@ -437,13 +460,24 @@ function renderOptions(focusMode = null) {
 function evaluateCombination(normalOption, eventOption, normalIndex, eventIndex) {
   const normal = rates.normal[normalOption.rank];
   const event = rates.event[eventOption.rank];
+  const currentCp = safeNumber(ownedCp.value);
+  const eventPtPerCp = event.pt * (1 + percent(eventOption.pt));
+  const eventItemPerCp = event.item * (1 + percent(eventOption.item));
   const ptPerFire = 5 * (
     normal.pt * (1 + percent(normalOption.pt)) +
-    normal.cp * event.pt * (1 + percent(eventOption.pt))
+    normal.cp * eventPtPerCp
   );
   const itemPerFire = 5 * (
     normal.item * (1 + percent(normalOption.item)) +
-    normal.cp * event.item * (1 + percent(eventOption.item))
+    normal.cp * eventItemPerCp
+  );
+  const ptRemaining = Math.max(
+    safeNumber(targetPt.value) - safeNumber(ownedPt.value) - currentCp * eventPtPerCp,
+    0,
+  );
+  const itemRemaining = Math.max(
+    safeNumber(targetItem.value) - safeNumber(ownedItem.value) - currentCp * eventItemPerCp,
+    0,
   );
 
   return {
@@ -453,13 +487,15 @@ function evaluateCombination(normalOption, eventOption, normalIndex, eventIndex)
     eventIndex,
     ptPerFire,
     itemPerFire,
-    ptFire: Math.max(safeNumber(targetPt.value) - safeNumber(ownedPt.value), 0) / ptPerFire,
-    itemFire: Math.max(safeNumber(targetItem.value) - safeNumber(ownedItem.value), 0) / itemPerFire,
+    ptRemaining,
+    itemRemaining,
+    ptFire: ptRemaining / ptPerFire,
+    itemFire: itemRemaining / itemPerFire,
   };
 }
 
 function renderRewardList() {
-  const memberRewardPoints = new Set([30000, 100000, 150000, 200000, 300000, 675000]);
+  const memberRewardPoints = new Set([30000, 75000, 125000, 200000, 300000, 525000]);
   rewardList.innerHTML = pointRewards.map((reward) => `<button type="button" class="reward-row${memberRewardPoints.has(reward.point) ? " member-reward" : ""}" data-reward-point="${reward.point}" style="--reward-progress:0%" aria-pressed="false">
     <span class="reward-progress" aria-hidden="true"></span>
     <img src="${reward.icon}" alt="" loading="lazy" />
@@ -555,14 +591,17 @@ function setupAnimatedDetails(details) {
 function renderBest(kind, result, unit) {
   const fire = result[`${kind}Fire`];
   const perFire = result[`${kind}PerFire`];
-  const remaining = kind === "pt"
+  const remaining = result[`${kind}Remaining`];
+  const beforeCp = kind === "pt"
     ? Math.max(safeNumber(targetPt.value) - safeNumber(ownedPt.value), 0)
     : Math.max(safeNumber(targetItem.value) - safeNumber(ownedItem.value), 0);
   document.querySelector(`#${kind}Winner`).textContent = `${result.normalOption.name} × ${result.eventOption.name}`;
   document.querySelector(`#${kind}Result`).textContent = format(fire);
-  document.querySelector(`#${kind}Rounded`).textContent = remaining === 0
+  document.querySelector(`#${kind}Rounded`).textContent = beforeCp === 0
     ? "已達目標，不需消耗火"
-    : `尚缺 ${format(remaining, 0)} ${unit} · 至少需要 ${Math.ceil(fire)} 火`;
+    : remaining === 0
+      ? "目前持有的 CP 已足夠，不需額外消耗火"
+      : `扣除目前持有與 CP 後尚缺 ${format(remaining, 0)} ${unit} · 至少需要 ${Math.ceil(fire)} 火`;
   document.querySelector(`#${kind}PerFire`).textContent = `${format(perFire)} ${unit}`;
 }
 

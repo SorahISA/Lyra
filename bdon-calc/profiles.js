@@ -91,11 +91,11 @@
       .profile-modal-message { margin: 9px 0 0; color: #94a6bd; font-size: .8rem; line-height: 1.55; }
       .profile-modal-label { display: grid; gap: 7px; margin-top: 17px; color: #94a6bd; font-size: .7rem; font-weight: 800; }
       .profile-modal-input { width: 100%; height: 42px; padding: 0 11px; border: 1px solid #35506a; border-radius: 9px; outline: 0; background: #071320; color: #f4f8ff; font: inherit; font-weight: 800; }
-      .profile-modal-input:focus { border-color: #5de4ff; outline: 2px solid #5de4ff; outline-offset: 2px; }
+      .profile-modal-input:focus { border-color: #ff6ba7; outline: 2px solid #ff6ba7; outline-offset: 2px; }
       .profile-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
       .profile-modal-actions button { min-width: 82px; height: 38px; padding: 0 13px; border: 1px solid #35506a; border-radius: 9px; background: #102238; color: #c6d6e8; cursor: pointer; font: inherit; font-size: .74rem; font-weight: 800; }
-      .profile-modal-actions button:hover, .profile-modal-actions button:focus-visible { border-color: #5de4ff; color: #5de4ff; }
-      .profile-modal-confirm { background: #123b50 !important; color: #5de4ff !important; }
+      .profile-modal-actions button:hover, .profile-modal-actions button:focus-visible { border-color: #ff6ba7; color: #ff6ba7; }
+      .profile-modal-confirm { background: #46182f !important; color: #ff6ba7 !important; }
       .profile-modal-confirm.danger { border-color: #8a4b40; background: #321c1b !important; color: #ff9b79 !important; }
     `;
     document.head.append(style);

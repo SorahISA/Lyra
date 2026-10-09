@@ -32,13 +32,13 @@ vm.runInContext(
   { filename: "optimizer-worker.js" },
 );
 
-assert.equal(core.actionPoints(78, 200, 0), 3900, "S 19.5 × 200");
-assert.equal(core.actionPoints(65, 200, 43), 4647, "A 16.25 × 200 × 1.43");
-assert.equal(core.actionPoints(65, 200, 43.5), 4663, "A 16.25 × 200 × 1.435");
-assert.equal(core.actionPoints(51, 400, 500), 30600, "B 12.75 × 400 × 6");
+assert.equal(core.actionPoints(90, 200, 0), 4500, "S 22.5 × 200");
+assert.equal(core.actionPoints(70, 200, 43), 5005, "A 17.5 × 200 × 1.43");
+assert.equal(core.actionPoints(70, 200, 43.5), 5022, "A 17.5 × 200 × 1.435");
+assert.equal(core.actionPoints(55, 400, 500), 33000, "B 13.75 × 400 × 6");
 assert.equal(core.actionPoints(53, 200, 0), 2650, "13.25 × 200");
 assert.deepEqual(core.allowedRanks("A", "normal"), ["A", "B", "C", "D"]);
-assert.deepEqual(core.allowedRanks("A", "event"), ["A", "B", "C"]);
+assert.deepEqual(core.allowedRanks("A", "event"), ["A", "B", "C", "D"]);
 
 {
   const actions = core.generateActions({
@@ -50,10 +50,10 @@ assert.deepEqual(core.allowedRanks("A", "event"), ["A", "B", "C"]);
   const normal = actions.filter((candidate) => candidate.mode === "normal");
   const event = actions.filter((candidate) => candidate.mode === "event");
   assert.equal(normal.length, 24, "A～D × 0～5 火");
-  assert.equal(event.length, 12, "A～C × 4 種 CP");
+  assert.equal(event.length, 16, "A～D × 4 種 CP");
   assert.deepEqual([...new Set(normal.map((candidate) => candidate.fire))], [0, 1, 2, 3, 4, 5]);
   assert.deepEqual([...new Set(event.map((candidate) => candidate.cpCost))], [200, 400, 800, 1600]);
-  assert.ok(!event.some((candidate) => candidate.rank === "D"));
+  assert.ok(event.some((candidate) => candidate.rank === "D"));
 }
 
 {
@@ -122,6 +122,15 @@ function solve(actions, target, initialCp = 0) {
     action({ mode: "event", points: 100, cpDelta: -200, cpCost: 200 }),
   ], 100, 0);
   assert.equal(result.status, "infeasible");
+}
+
+{
+  const result = solve([
+    action({ mode: "event", points: 100, cpDelta: -200, cpCost: 200 }),
+  ], 100, 200);
+  assert.equal(result.status, "optimal");
+  assert.equal(result.totals.plays, 1);
+  assert.equal(result.totals.cpBalance, 0);
 }
 
 {

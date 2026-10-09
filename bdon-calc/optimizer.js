@@ -1,16 +1,6 @@
 const STORAGE_KEY = window.BdonProfiles?.stateKey() ?? "bdon-calc-teams-v1";
 const OPTIMIZER_KEY = window.BdonProfiles?.optimizerKey() ?? "bdon-calc-optimizer-v1";
 const MAX_TARGET = 2_147_483_647;
-const RANK_ORDER = ["SS", "S", "A", "B", "C", "D"];
-const NORMAL_RATES = {
-  SS: { quarterPt: 400, cp: 10 }, S: { quarterPt: 300, cp: 8 },
-  A: { quarterPt: 200, cp: 6 }, B: { quarterPt: 140, cp: 5 },
-  C: { quarterPt: 100, cp: 4 }, D: { quarterPt: 60, cp: 3 },
-};
-const EVENT_RATES = {
-  SS: { quarterPt: 100 }, S: { quarterPt: 78 }, A: { quarterPt: 65 },
-  B: { quarterPt: 51 }, C: { quarterPt: 40 }, D: { quarterPt: 30 },
-};
 const optimizerCore = window.BdonOptimizerCore;
 
 const format = (value) => new Intl.NumberFormat("zh-TW", { maximumFractionDigits: 0 }).format(value);

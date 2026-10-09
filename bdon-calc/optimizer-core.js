@@ -10,8 +10,8 @@
     C: { quarterPt: 100, cp: 4 }, D: { quarterPt: 60, cp: 3 },
   };
   const EVENT_RATES = {
-    SS: { quarterPt: 100 }, S: { quarterPt: 78 }, A: { quarterPt: 65 },
-    B: { quarterPt: 51 }, C: { quarterPt: 40 },
+    SS: { quarterPt: 110 }, S: { quarterPt: 90 }, A: { quarterPt: 70 },
+    B: { quarterPt: 55 }, C: { quarterPt: 40 }, D: { quarterPt: 30 },
   };
   const EVENT_CP_COSTS = [200, 400, 800, 1600];
 
@@ -24,7 +24,7 @@
   function allowedRanks(maxRank, mode) {
     const start = RANK_ORDER.indexOf(maxRank);
     if (start < 0) return [];
-    return RANK_ORDER.slice(start).filter((rank) => mode === "normal" || rank !== "D");
+    return RANK_ORDER.slice(start);
   }
 
   function actionPoints(quarterPt, multiplier, bonus) {
